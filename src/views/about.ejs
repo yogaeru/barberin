@@ -409,7 +409,7 @@
         messageType: "success",
 
         get isLoggedIn() {
-          return !!this.user.email;
+          return !!this.user.username;
         },
 
         get dashboardRoute() {
@@ -437,8 +437,12 @@
 
         logout() {
           if (confirm("Yakin ingin keluar?")) {
-            window.BarberSyncStore.clearCurrentUser();
-            window.location.href = "/login";
+            fetch("/api/auth/logout", { method: "POST" }).then(() => {
+              window.BarberSyncStore.clearCurrentUser();
+              localStorage.removeItem("barbersync-token");
+              localStorage.removeItem("barbersync-user");
+              window.location.href = "/login";
+            });
           }
         },
 
@@ -516,7 +520,7 @@
 
           try {
             const stored = window.BarberSyncStore.getCurrentUser();
-            if (stored && stored.email) {
+            if (stored && stored.username) {
               this.user = stored;
             }
           } catch (e) {}
@@ -528,7 +532,7 @@
               key === "barbersync-users"
             ) {
               const stored = window.BarberSyncStore.getCurrentUser();
-              this.user = stored && stored.email ? stored : {};
+              this.user = stored && stored.username ? stored : {};
             }
           });
         },

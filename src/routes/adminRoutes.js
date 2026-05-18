@@ -4,6 +4,7 @@ import {
 } from "../middleware/authMiddleware.js";
 import {
   generateSchedules,
+  generateSchedulesForm,
   getAdminDashboardApi,
   renderAdminBookings,
   renderAdminDashboard,
@@ -15,8 +16,11 @@ import {
   renderAdminSchedules,
   renderAdminUsers,
   toggleBarberAvailability,
+  toggleBarberAvailabilityForm,
   updateBookingStatus,
+  updateQueueStatus,
   updateScheduleStatus,
+  updateScheduleStatusForm,
 } from "../controllers/adminController.js";
 
 const registerAdminRoutes = (app) => {
@@ -68,7 +72,23 @@ const registerAdminRoutes = (app) => {
   app.get(
     "/admin/kapster/toggle/:id",
     pageRoleRequired(["admin"], "/login"),
-    toggleBarberAvailability,
+    toggleBarberAvailabilityForm,
+  );
+
+  app.post(
+    "/admin/queue/update-status",
+    pageRoleRequired(["admin"], "/login"),
+    updateQueueStatus,
+  );
+  app.post(
+    "/admin/schedules/generate",
+    pageRoleRequired(["admin"], "/login"),
+    generateSchedulesForm,
+  );
+  app.post(
+    "/admin/schedules/:scheduleId/status",
+    pageRoleRequired(["admin"], "/login"),
+    updateScheduleStatusForm,
   );
 
   app.patch(

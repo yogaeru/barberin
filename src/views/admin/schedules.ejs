@@ -188,17 +188,6 @@
       message: "",
       messageType: "success",
 
-      get token() {
-        return localStorage.getItem("barbersync-token") || "";
-      },
-
-      headers() {
-        return {
-          "Content-Type": "application/json",
-          ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
-        };
-      },
-
       statusClass(status) {
         switch (status) {
           case "tersedia":
@@ -237,66 +226,43 @@
         const params = new URLSearchParams();
         if (this.date) params.set("date", this.date);
         if (this.barberId) params.set("barberId", this.barberId);
-
-        fetch(`/api/schedules?${params.toString()}`)
-          .then((response) => response.json())
-          .then((payload) => {
-            this.schedules = payload.schedules || [];
-            this.refreshStats();
-          })
-          .catch(() => {
-            this.message = "Gagal memuat jadwal";
-            this.messageType = "error";
-          });
+        window.location.href = "/admin/schedules?" + params.toString();
       },
 
       generateSchedules() {
-        fetch("/api/admin/schedules/generate", {
-          method: "POST",
-          headers: this.headers(),
-          body: JSON.stringify({ date: this.date, barberId: this.barberId || null }),
-        })
-          .then(async (response) => {
-            const payload = await response.json();
-            if (!response.ok) {
-              throw new Error(payload.message || "Generate gagal");
-            }
-            return payload;
-          })
-          .then((payload) => {
-            this.schedules = payload.schedules || [];
-            this.refreshStats();
-            this.message = "Slot jadwal berhasil digenerate";
-            this.messageType = "success";
-          })
-          .catch((error) => {
-            this.message = error.message;
-            this.messageType = "error";
-          });
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/admin/schedules/generate";
+
+        const dateInput = document.createElement("input");
+        dateInput.type = "hidden";
+        dateInput.name = "date";
+        dateInput.value = this.date || "";
+        form.appendChild(dateInput);
+
+        const barberIdInput = document.createElement("input");
+        barberIdInput.type = "hidden";
+        barberIdInput.name = "barberId";
+        barberIdInput.value = this.barberId || "";
+        form.appendChild(barberIdInput);
+
+        document.body.appendChild(form);
+        form.submit();
       },
 
       changeStatus(scheduleId, status) {
-        fetch(`/api/admin/schedules/${scheduleId}`, {
-          method: "PATCH",
-          headers: this.headers(),
-          body: JSON.stringify({ status }),
-        })
-          .then(async (response) => {
-            const payload = await response.json();
-            if (!response.ok) {
-              throw new Error(payload.message || "Gagal mengubah status");
-            }
-            return payload;
-          })
-          .then(() => {
-            this.loadSchedules();
-            this.message = "Status jadwal diperbarui";
-            this.messageType = "success";
-          })
-          .catch((error) => {
-            this.message = error.message;
-            this.messageType = "error";
-          });
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/admin/schedules/" + scheduleId + "/status";
+
+        const statusInput = document.createElement("input");
+        statusInput.type = "hidden";
+        statusInput.name = "status";
+        statusInput.value = status;
+        form.appendChild(statusInput);
+
+        document.body.appendChild(form);
+        form.submit();
       },
 
       init() {

@@ -63,6 +63,31 @@
             <h1 class="text-3xl font-bold tracking-tight mt-2">
               <span class="text-primary">Barber</span>Sync
             </h1>
+            <div
+              class="flex items-center gap-3 mt-4 p-3 rounded-2xl bg-base-100/30 border border-base-content/10"
+              x-data="{ user: null }"
+              x-init="
+                const u = window.BarberSyncStore?.getCurrentUser() || window.__authUser;
+                if (u?.username) user = u;
+                window.addEventListener('barbersync-auth-ready', () => {
+                  const u = window.BarberSyncStore?.getCurrentUser() || window.__authUser;
+                  if (u?.username) user = u;
+                });
+              "
+            >
+              <template x-if="user">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg shrink-0" x-text="(user.nama || user.name || user.username || '?')[0]"></div>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-sm truncate" x-text="user.nama || user.name || user.username"></p>
+                    <p class="text-xs text-base-content/50 capitalize" x-text="user.role"></p>
+                  </div>
+                </div>
+              </template>
+              <template x-if="!user">
+                <p class="text-sm text-base-content/70">Memuat...</p>
+              </template>
+            </div>
             <p class="text-sm text-base-content/70 mt-2">
               Kelola antrian, booking, order, dan penggajian dari satu tempat.
             </p>
@@ -117,6 +142,9 @@
           </nav>
 
           <div class="mt-auto pt-6 space-y-3">
+            <button @click="fetch('/api/auth/logout',{method:'POST'}).then(()=>{localStorage.removeItem('barbersync-token');localStorage.removeItem('barbersync-user');window.BarberSyncStore?.clearCurrentUser();window.location.href='/login'})" class="btn btn-ghost btn-block border border-base-content/10"
+              >🚪 Keluar</button
+            >
             <a href="/" class="btn btn-primary btn-block"
               >← Kembali ke Aplikasi</a
             >
@@ -153,7 +181,7 @@
                 </h1>
               </div>
             </div>
-            <a href="/" class="btn btn-sm btn-primary">Keluar</a>
+            <button @click="fetch('/api/auth/logout',{method:'POST'}).then(()=>{localStorage.removeItem('barbersync-token');localStorage.removeItem('barbersync-user');window.BarberSyncStore?.clearCurrentUser();window.location.href='/login'})" class="btn btn-sm btn-primary">Keluar</button>
           </div>
 
           <!-- Mobile drawer -->

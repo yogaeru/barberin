@@ -2,6 +2,24 @@
   <%- JSON.stringify(demoUsers) %>
 </script>
 <script>
+  // Hydrate auth state from HttpOnly cookie on every page load
+  window.__authUser = null;
+  (async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        window.__authUser = data.auth;
+        if (window.BarberSyncStore?.setCurrentUser) {
+          window.BarberSyncStore.setCurrentUser(data.auth);
+        }
+      } else if (window.BarberSyncStore?.clearCurrentUser) {
+        window.BarberSyncStore.clearCurrentUser();
+      }
+    } catch {}
+    window.dispatchEvent(new Event('barbersync-auth-ready'));
+  })();
+
   window.BarberSyncStore =
     window.BarberSyncStore ||
     (() => {

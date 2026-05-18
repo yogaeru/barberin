@@ -1,3 +1,3 @@
-import { authenticateUser, registerAccount } from "./dataService.js";
+import { authenticateUser, registerAccount } from "./userService.js";
 
 export { authenticateUser, registerAccount };

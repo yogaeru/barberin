@@ -18,8 +18,18 @@ export const createBooking = (req, res) => {
   });
 
   if (!result.ok) {
-    return res.status(400).json(result);
+    if (req.is("json")) {
+      return res.status(400).json(result);
+    }
+    return res.redirect("/booking?error=" + encodeURIComponent(result.message));
   }
 
-  return res.status(201).json(result);
+  if (req.is("json")) {
+    return res.status(201).json(result);
+  }
+
+  res.render("booking-redirect", {
+    layout: false,
+    booking: result.booking,
+  });
 };

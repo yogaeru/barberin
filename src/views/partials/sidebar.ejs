@@ -1,21 +1,33 @@
 <aside
   class="hidden lg:flex flex-col w-72 h-screen p-4 bg-base-200/0 backdrop-blur-2xl border-r border-base-content/10 shadow-2xl"
+  x-data="{ user: null }"
+  x-init="
+    const u = window.BarberSyncStore?.getCurrentUser() || window.__authUser;
+    if (u?.username) user = u;
+    window.addEventListener('barbersync-auth-ready', () => {
+      const u = window.BarberSyncStore?.getCurrentUser() || window.__authUser;
+      if (u?.username) user = u;
+    });
+  "
 >
   <div
     class="flex flex-col h-full rounded-[2rem] bg-base-100/20 backdrop-blur-2xl border border-base-content/10 p-4"
   >
-    <div class="mb-8 px-2">
+    <!-- Brand + User Avatar -->
+    <div class="mb-6 px-2">
       <h1 class="text-3xl font-bold tracking-tight text-base-content">
         <span class="text-primary">Barber</span>Sync
       </h1>
+      <template x-if="user">
+        <div class="flex items-center gap-3 mt-4 p-3 rounded-2xl bg-base-100/30 border border-base-content/10">
+          <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg" x-text="(user.nama || user.name || user.username || '?')[0]"></div>
+          <div class="min-w-0">
+            <p class="font-semibold text-sm truncate" x-text="user.nama || user.name || user.username"></p>
+            <p class="text-xs text-base-content/50 capitalize" x-text="user.role"></p>
+          </div>
+        </div>
+      </template>
     </div>
-
-    <label
-      class="input input-bordered flex items-center gap-2 rounded-2xl bg-base-100/40 border-base-content/10 mb-6"
-    >
-      🔍
-      <input type="text" class="grow" placeholder="Cari..." />
-    </label>
 
     <nav class="flex flex-col gap-2">
       <a
@@ -76,9 +88,16 @@
         <span>Admin Panel</span>
       </a>
 
-      <a href="/login" class="btn btn-primary w-full rounded-full shadow-lg">
-        🚪 Keluar
-      </a>
+      <template x-if="!user">
+        <a href="/login" class="btn btn-primary w-full rounded-full shadow-lg">
+          🔑 Masuk
+        </a>
+      </template>
+      <template x-if="user">
+        <button @click="fetch('/api/auth/logout',{method:'POST'}).then(()=>{localStorage.removeItem('barbersync-token');localStorage.removeItem('barbersync-user');window.BarberSyncStore?.clearCurrentUser();window.location.href='/login'})" class="btn btn-ghost w-full rounded-full shadow-lg border border-base-content/10">
+          🚪 Keluar
+        </button>
+      </template>
     </div>
   </div>
 </aside>

@@ -129,17 +129,6 @@
       currentPage: "admin-queue",
       queue: <%- JSON.stringify(queue || []) %>,
 
-      get token() {
-        return localStorage.getItem("barbersync-token") || "";
-      },
-
-      headers() {
-        return {
-          "Content-Type": "application/json",
-          ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
-        };
-      },
-
       statusClass(status) {
         switch (status) {
           case "pending":
@@ -170,42 +159,28 @@
         }
       },
 
-      refresh() {
-        fetch("/api/admin/dashboard", {
-          headers: this.headers(),
-        })
-          .then((response) => response.json())
-          .then((payload) => {
-            this.queue = payload.queue || [];
-          })
-          .catch(() => {
-            this.queue = this.queue || [];
-          });
-      },
-
       setStatus(item, statusBooking) {
-        const rawBookingId = item.rawBookingId || item.bookingId;
-        fetch(`/api/admin/queue/${rawBookingId}/status`, {
-          method: "PATCH",
-          headers: this.headers(),
-          body: JSON.stringify({ statusBooking }),
-        })
-          .then(async (response) => {
-            const payload = await response.json();
-            if (!response.ok) {
-              throw new Error(payload.message || "Gagal memperbarui status");
-            }
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/admin/queue/update-status";
 
-            return payload;
-          })
-          .then(() => this.refresh())
-          .catch((error) => {
-            alert(error.message);
-          });
+        const bookingIdInput = document.createElement("input");
+        bookingIdInput.type = "hidden";
+        bookingIdInput.name = "bookingId";
+        bookingIdInput.value = String(item.rawBookingId || item.bookingId);
+        form.appendChild(bookingIdInput);
+
+        const statusInput = document.createElement("input");
+        statusInput.type = "hidden";
+        statusInput.name = "statusBooking";
+        statusInput.value = statusBooking;
+        form.appendChild(statusInput);
+
+        document.body.appendChild(form);
+        form.submit();
       },
 
       init() {
-        this.refresh();
       },
     };
   }

@@ -145,16 +145,6 @@
       users: <%- JSON.stringify(users || []) %>,
       orders: <%- JSON.stringify(orders || []) %>,
 
-      get token() {
-        return localStorage.getItem("barbersync-token") || "";
-      },
-
-      headers() {
-        return this.token
-          ? { Authorization: `Bearer ${this.token}` }
-          : {};
-      },
-
       get orderPaidCount() {
         return this.orders.filter((order) => order.statusLabel === "Lunas").length;
       },
@@ -189,22 +179,7 @@
         }
       },
 
-      refresh() {
-        fetch("/api/admin/dashboard", {
-          headers: this.headers(),
-        })
-          .then((response) => response.json())
-          .then((payload) => {
-            this.queue = payload.queue || [];
-            this.bookings = payload.bookings || [];
-            this.users = payload.users || [];
-            this.orders = payload.orders || [];
-          })
-          .catch(() => {});
-      },
-
       init() {
-        this.refresh();
       },
     };
   }

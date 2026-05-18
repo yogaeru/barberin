@@ -8,10 +8,10 @@ import {
   getPublicBootstrapData,
   getRegisterPageData,
   getStatusPageData,
-  listBarbers,
-  listSchedules,
-  listServices,
-} from "./dataService.js";
+} from "./pageService.js";
+import { listBarbers } from "./barberService.js";
+import { listSchedules } from "./scheduleService.js";
+import { listServices } from "./serviceService.js";
 
 export {
   getAboutPageData,

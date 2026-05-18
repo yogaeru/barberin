@@ -1,8 +1,8 @@
 import {
   generateSchedulesForDate,
-  getAdminDashboardApiData,
   getAdminBarbersData,
   getAdminBookingsData,
+  getAdminDashboardApiData,
   getAdminDashboardData,
   getAdminHistoryData,
   getAdminOrdersData,
@@ -116,8 +116,15 @@ export const toggleBarberAvailability = (req, res) => {
   if (!result.ok) {
     return res.status(404).json(result);
   }
-
   return res.json(result);
+};
+
+export const toggleBarberAvailabilityForm = (req, res) => {
+  const result = toggleBarberAvailabilityById(Number(req.params.id));
+  if (!result.ok) {
+    return res.redirect("/admin/kapster?error=" + encodeURIComponent(result.message));
+  }
+  return res.redirect("/admin/kapster");
 };
 
 export const updateBookingStatus = (req, res) => {
@@ -143,12 +150,46 @@ export const updateBookingStatus = (req, res) => {
   return res.json(result);
 };
 
+export const updateQueueStatus = (req, res) => {
+  const allowed = [
+    "menunggu",
+    "dikonfirmasi",
+    "dalam_proses",
+    "selesai",
+    "dibatalkan",
+  ];
+  const statusBooking = req.body.statusBooking;
+  const bookingId = Number(req.body.bookingId || req.params.bookingId);
+
+  if (!allowed.includes(statusBooking)) {
+    return res.redirect("/admin/queue?error=" + encodeURIComponent("Status tidak valid"));
+  }
+
+  const result = updateBookingStatusById(bookingId, statusBooking);
+  if (!result.ok) {
+    return res.redirect("/admin/queue?error=" + encodeURIComponent(result.message));
+  }
+
+  return res.redirect("/admin/queue");
+};
+
 export const generateSchedules = (req, res) => {
   const date = req.body.date ? String(req.body.date) : undefined;
   const barberId = req.body.barberId ? Number(req.body.barberId) : null;
   return res
     .status(201)
     .json({ ok: true, schedules: generateSchedulesForDate(date, barberId) });
+};
+
+export const generateSchedulesForm = (req, res) => {
+  const date = req.body.date ? String(req.body.date) : undefined;
+  const barberId = req.body.barberId ? Number(req.body.barberId) : null;
+
+  generateSchedulesForDate(date, barberId);
+  const params = new URLSearchParams();
+  if (date) params.set("date", date);
+  if (barberId) params.set("barberId", String(barberId));
+  return res.redirect("/admin/schedules?" + params.toString());
 };
 
 export const updateScheduleStatus = (req, res) => {
@@ -166,6 +207,22 @@ export const updateScheduleStatus = (req, res) => {
   }
 
   return res.json(result);
+};
+
+export const updateScheduleStatusForm = (req, res) => {
+  const allowed = ["tersedia", "penuh", "libur"];
+  const status = req.body.status;
+  if (!allowed.includes(status)) {
+    return res.redirect("/admin/schedules?error=" + encodeURIComponent("Status tidak valid"));
+  }
+
+  const result = updateScheduleStatusById(Number(req.params.scheduleId), status);
+  if (!result.ok) {
+    return res.redirect("/admin/schedules?error=" + encodeURIComponent(result.message));
+  }
+
+  const referer = req.get("Referer") || "/admin/schedules";
+  return res.redirect(referer);
 };
 
 export const getAdminDashboardApi = (req, res) => {

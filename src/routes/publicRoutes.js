@@ -1,4 +1,8 @@
-import { guestOnly, pageRoleRequired } from "../middleware/authMiddleware.js";
+import {
+  guestOnly,
+  pageRoleRequired,
+  authRequired,
+} from "../middleware/authMiddleware.js";
 import {
   renderAboutPage,
   renderBookingPage,
@@ -9,6 +13,7 @@ import {
   renderRegisterPage,
   renderStatusPage,
 } from "../controllers/publicController.js";
+import { createBooking } from "../controllers/bookingController.js";
 
 const registerPublicRoutes = (app) => {
   app.get("/", renderHomePage);
@@ -19,6 +24,7 @@ const registerPublicRoutes = (app) => {
   app.get("/register", guestOnly, renderRegisterPage);
   app.get("/forgot-password", guestOnly, renderForgotPasswordPage);
   app.get("/about", pageRoleRequired(["user"]), renderAboutPage);
+  app.post("/booking/create", authRequired, createBooking);
 };
 
 export { registerPublicRoutes };

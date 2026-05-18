@@ -1,5 +1,7 @@
+import { queryOne } from "../lib/database.js";
 import { signToken } from "../lib/auth.js";
 import { authenticateUser, registerAccount } from "../services/authService.js";
+import { getPublicUser } from "../services/userService.js";
 
 const setAuthCookie = (res, token) => {
   res.setHeader(
@@ -39,5 +41,16 @@ export const register = (req, res) => {
 };
 
 export const me = (req, res) => {
-  res.json({ ok: true, auth: req.auth });
+  const user = queryOne(`SELECT * FROM users WHERE userId = ? LIMIT 1`, [
+    req.auth.userId,
+  ]);
+  res.json({ ok: true, auth: user ? getPublicUser(user) : req.auth });
+};
+
+export const logout = (req, res) => {
+  res.setHeader(
+    "Set-Cookie",
+    `barbersync-token=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`,
+  );
+  return res.json({ ok: true });
 };

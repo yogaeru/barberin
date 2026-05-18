@@ -384,56 +384,45 @@
             return;
           }
 
-          const token = localStorage.getItem("barbersync-token");
-          if (!token) {
-            this.message = "Silakan login terlebih dahulu";
-            this.messageType = "error";
-            return;
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = "/booking/create";
+
+          const inputs = {
+            serviceId: String(this.selectedService),
+            barberId: this.selectedBarber ? String(this.selectedBarber) : "",
+            date: this.todayDate,
+            time: this.bookingTime,
+            catatan: this.catatan || "",
+          };
+
+          for (const [name, value] of Object.entries(inputs)) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
           }
 
-          fetch("/api/bookings", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              serviceId: this.selectedService,
-              barberId: this.selectedBarber || null,
-              date: this.todayDate,
-              time: this.bookingTime,
-              catatan: this.catatan,
-            }),
-          })
-            .then(async (response) => {
-              const payload = await response.json();
-              if (!response.ok) {
-                throw new Error(payload.message || "Booking gagal");
-              }
-
-              return payload;
-            })
-            .then((result) => {
-              const booking = result.booking;
-              this.userBookings = window.BarberSyncStore.setCurrentUserQueue(booking, this.user);
-              this.message = "Booking berhasil! Nomor booking: " + booking.bookingId;
-              this.messageType = "success";
-
-              setTimeout(() => {
-                window.location.href = "/status";
-              }, 1500);
-            })
-            .catch((error) => {
-              this.message = error.message;
-              this.messageType = "error";
-            });
+          document.body.appendChild(form);
+          form.submit();
         },
 
         init() {
           this.setTheme(this.theme);
+
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get("error");
+            if (error) {
+              this.message = error;
+              this.messageType = "error";
+            }
+          } catch (e) {}
+
           try {
             const storedUser = window.BarberSyncStore.getCurrentUser();
-            if (storedUser && storedUser.email) {
+            if (storedUser && storedUser.username) {
               this.user = storedUser;
             }
           } catch (e) {}

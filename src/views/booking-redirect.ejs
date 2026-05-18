@@ -1,0 +1,14 @@
+<%- include("./partials/storageHelpers") %>
+<script>
+  (function(){
+    try {
+      var booking = <%- JSON.stringify(booking) %>;
+      var store = window.BarberSyncStore;
+      if (store) {
+        var user = store.getCurrentUser();
+        store.setCurrentUserQueue(booking, user);
+      }
+    } catch(e) {}
+    window.location.href = "/status";
+  })();
+</script>
