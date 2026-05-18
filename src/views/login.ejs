@@ -1,0 +1,164 @@
+<div class="lg:flex lg:min-h-screen" x-data="loginApp()" x-init="init()">
+  <div class="flex-1 min-w-0 flex flex-col gap-6 px-4 py-4">
+    <%- include('partials/header', { showBack: true, pageTitle: 'Masuk', showLoginNav: false }) %>
+    <div class="flex-1 min-w-0 flex items-center justify-center py-8">
+    <div class="w-full max-w-md">
+      <!-- Login Card -->
+      <div
+        class="bg-base-100/30 backdrop-blur-sm rounded-2xl p-8 border-2 border-base-content/10 space-y-6"
+      >
+        <div class="text-center">
+          <h1 class="font-['Noto_Serif'] text-3xl font-bold text-primary mb-2">
+            BarberSync
+          </h1>
+          <p class="text-base-content/70">Masuk ke akun Anda</p>
+        </div>
+
+        <!-- Form -->
+        <form @submit.prevent="handleLogin" class="space-y-4">
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Username atau Email</span>
+            </label>
+            <input
+              x-model="identifier"
+              type="text"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="contoh@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Kata Sandi</span>
+              <a href="/forgot-password" class="label-text-alt link link-hover text-primary">
+                Lupa kata sandi?
+              </a>
+            </label>
+            <input
+              x-model="password"
+              type="password"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full">
+            <span x-show="!loading">Masuk</span>
+            <span
+              x-show="loading"
+              class="loading loading-spinner loading-sm"
+            ></span>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="divider">atau</div>
+
+        <!-- Social Login (Demo) -->
+        <div class="space-y-2">
+          <button class="btn btn-outline w-full">
+            📧 Lanjutkan dengan Google
+          </button>
+        </div>
+
+        <!-- Sign Up Link -->
+        <p class="text-center text-sm text-base-content/70">
+          Belum punya akun?
+          <a href="/register" class="link link-primary font-semibold"
+            >Daftar di sini</a
+          >
+        </p>
+      </div>
+
+      <!-- Info Box -->
+      <div
+        class="mt-6 bg-base-100/30 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 text-center"
+      >
+        <p class="text-sm text-primary font-semibold">Demo Account</p>
+        <p class="text-xs text-primary/80 mt-1">
+          Admin: <%= demoUsers[0].username %> | <%= demoUsers[0].password %>
+        </p>
+        <p class="text-xs text-primary/80 mt-1">
+          User: <%= demoUsers[1].username %> | <%= demoUsers[1].password %>
+        </p>
+      </div>
+
+      <!-- Messages -->
+      <template x-if="message">
+        <div
+          class="alert mt-4"
+          :class="messageType === 'error' ? 'alert-error' : 'alert-success'"
+        >
+          <p x-text="message"></p>
+        </div>
+      </template>
+    </div>
+  </div>
+  <%- include('partials/bottomNavbar') %>
+</div>
+
+<script>
+  function loginApp() {
+    return {
+      currentPage: "login",
+      theme: localStorage.getItem("barbersync-theme") || "business",
+      identifier: "",
+      password: "",
+      loading: false,
+      message: "",
+      messageType: "success",
+
+      setTheme(value) {
+        this.theme = value;
+        document.documentElement.setAttribute("data-theme", value);
+        localStorage.setItem("barbersync-theme", value);
+      },
+
+      handleLogin() {
+        this.loading = true;
+
+        fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: this.identifier, password: this.password }),
+        })
+          .then(async (response) => {
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.message || "Login gagal");
+            }
+
+            return payload;
+          })
+          .then((result) => {
+            localStorage.setItem("barbersync-token", result.token);
+            localStorage.setItem("barbersync-user", JSON.stringify(result.user));
+            if (window.BarberSyncStore?.setCurrentUser) {
+              window.BarberSyncStore.setCurrentUser(result.user);
+            }
+
+            this.message = "Login berhasil! Mengalihkan...";
+            this.messageType = "success";
+
+            setTimeout(() => {
+              window.location.href = result.user.role === "admin" ? "/admin" : "/";
+            }, 1000);
+          })
+          .catch((error) => {
+            this.message = error.message;
+            this.messageType = "error";
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      },
+
+      init() {
+        this.setTheme(this.theme);
+      },
+    };
+  }
+</script>

@@ -1,0 +1,41 @@
+<%
+  const defaultShowLoginNav =
+    typeof currentPage !== 'undefined' &&
+    !['login', 'register', 'forgot-password'].includes(currentPage);
+  const showLoginNavValue =
+    typeof showLoginNav !== 'undefined' ? showLoginNav : defaultShowLoginNav;
+%>
+
+<!-- Header with back button, title, and utility controls -->
+<header class="bg-base-100/20 backdrop-blur-sm font-['Noto_Serif'] font-bold text-lg tracking-tight border-2 border-base-content/10 flex justify-between items-center w-full px-5 py-4 rounded-full z-40">
+  <div class="flex items-center gap-3">
+    <% if (typeof showBack !== 'undefined' && showBack) { %>
+      <button class="text-base-content hover:text-primary transition-colors" onclick="history.back()">
+        🔙
+      </button>
+    <% } %>
+    <% if (typeof pageTitle !== 'undefined') { %>
+      <span class="text-xl"><%= pageTitle %></span>
+    <% } else { %>
+      <span class="font-['Noto_Serif'] text-xl font-bold text-primary tracking-widest uppercase">BarberSync</span>
+    <% } %>
+  </div>
+  <div class="flex items-center gap-2">
+    <% if (showLoginNavValue) { %>
+      <a href="/login" class="btn btn-primary btn-xs sm:btn-sm rounded-full px-4">
+        🚪 Masuk
+      </a>
+    <% } %>
+    <!-- <select class="select select-bordered select-xs w-24 bg-base-200" x-model="theme" @change="setTheme(theme)">
+      <option value="coffee">Coffee</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+      <option value="business">Business</option>
+    </select> -->
+    <% if (typeof userAvatar !== 'undefined' && userAvatar) { %>
+      <button class="w-8 h-8 rounded-full overflow-hidden border border-base-300 bg-primary flex items-center justify-center text-sm font-bold text-primary-content">
+        <%= userAvatar %>
+      </button>
+    <% } %>
+  </div>
+</header>

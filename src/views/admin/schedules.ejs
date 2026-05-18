@@ -1,0 +1,307 @@
+<section class="space-y-6" x-data="adminSchedulesApp()" x-init="init()" x-cloak>
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">
+      Jadwal Kapster
+    </p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Kelola Slot Jadwal</h2>
+    <p class="text-base-content/70 max-w-3xl">
+      Generate slot 30 menit dari 10:30 sampai 21:30, lalu ubah status tiap slot
+      secara manual.
+    </p>
+  </div>
+
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Tanggal</p>
+      <input
+        x-model="date"
+        type="date"
+        class="input input-bordered w-full mt-2 bg-base-100/70"
+      />
+    </div>
+
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Kapster</p>
+      <select
+        x-model="barberId"
+        class="select select-bordered w-full mt-2 bg-base-100/70"
+      >
+        <option value="">Semua Kapster</option>
+        <template x-for="barber in barbers" :key="barber.barberId || barber.id">
+          <option
+            :value="barber.barberId || barber.id"
+            x-text="barber.name"
+          ></option>
+        </template>
+      </select>
+    </div>
+
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10 flex flex-col justify-end gap-3"
+    >
+      <button class="btn btn-primary w-full" @click="generateSchedules()">
+        Generate Slot Default
+      </button>
+      <button class="btn btn-outline w-full" @click="loadSchedules()">
+        Muat Jadwal
+      </button>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Tersedia</p>
+      <h3
+        class="text-3xl font-bold text-success mt-2"
+        x-text="stats.tersedia"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Penuh</p>
+      <h3
+        class="text-3xl font-bold text-warning mt-2"
+        x-text="stats.penuh"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Libur</p>
+      <h3 class="text-3xl font-bold text-error mt-2" x-text="stats.libur"></h3>
+    </div>
+  </section>
+
+  <section
+    class="bg-base-100/20 backdrop-blur-sm rounded-2xl border border-base-content/10 overflow-hidden"
+  >
+    <div
+      class="flex items-center justify-between px-5 py-4 border-b border-base-content/10 gap-3 flex-wrap"
+    >
+      <div>
+        <h3 class="text-xl font-semibold">Daftar Slot Jadwal</h3>
+        <p class="text-sm text-base-content/60">
+          Setiap baris mewakili slot 30 menit untuk kapster yang dipilih.
+        </p>
+      </div>
+      <a href="/admin/kapster" class="text-sm text-primary font-semibold"
+        >Kelola kapster</a
+      >
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr class="text-base-content/60">
+            <th>Kapster</th>
+            <th>Waktu</th>
+            <th>Status</th>
+            <th>Booking</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="schedule in schedules" :key="schedule.scheduleId">
+            <tr>
+              <td>
+                <div class="font-semibold" x-text="schedule.barberName"></div>
+                <div
+                  class="text-xs text-base-content/60"
+                  x-text="schedule.date"
+                ></div>
+              </td>
+              <td>
+                <div class="font-semibold" x-text="schedule.time"></div>
+                <div
+                  class="text-xs text-base-content/60"
+                  x-text="schedule.endTime"
+                ></div>
+              </td>
+              <td>
+                <span
+                  class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold"
+                  :class="statusClass(schedule.status)"
+                  x-text="statusLabel(schedule.status)"
+                ></span>
+              </td>
+              <td
+                class="text-sm text-base-content/70"
+                x-text="schedule.bookingId ? ('Booking #' + schedule.bookingId) : '-' "
+              ></td>
+              <td>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    class="btn btn-xs btn-success"
+                    @click="changeStatus(schedule.scheduleId, 'tersedia')"
+                  >
+                    Tersedia
+                  </button>
+                  <button
+                    class="btn btn-xs btn-warning"
+                    @click="changeStatus(schedule.scheduleId, 'penuh')"
+                  >
+                    Penuh
+                  </button>
+                  <button
+                    class="btn btn-xs btn-error"
+                    @click="changeStatus(schedule.scheduleId, 'libur')"
+                  >
+                    Libur
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <template x-if="message">
+    <div class="toast toast-top toast-end z-50">
+      <div
+        class="alert"
+        :class="messageType === 'error' ? 'alert-error' : 'alert-success'"
+        x-text="message"
+        @click="message = null"
+      ></div>
+    </div>
+  </template>
+</section>
+
+<script>
+  function adminSchedulesApp() {
+    return {
+      currentPage: "admin-schedules",
+      date: "<%= date %>",
+      barberId: "<%= barberId || '' %>",
+      barbers: <%- JSON.stringify(barbers || []) %>,
+      schedules: <%- JSON.stringify(schedules || []) %>,
+      stats: { tersedia: 0, penuh: 0, libur: 0 },
+      message: "",
+      messageType: "success",
+
+      get token() {
+        return localStorage.getItem("barbersync-token") || "";
+      },
+
+      headers() {
+        return {
+          "Content-Type": "application/json",
+          ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+        };
+      },
+
+      statusClass(status) {
+        switch (status) {
+          case "tersedia":
+            return "bg-success/20 text-success border-success/30";
+          case "penuh":
+            return "bg-warning/20 text-warning border-warning/30";
+          case "libur":
+            return "bg-error/20 text-error border-error/30";
+          default:
+            return "bg-base-300 text-base-content/70";
+        }
+      },
+
+      statusLabel(status) {
+        switch (status) {
+          case "tersedia":
+            return "Tersedia";
+          case "penuh":
+            return "Penuh";
+          case "libur":
+            return "Libur";
+          default:
+            return status;
+        }
+      },
+
+      refreshStats() {
+        this.stats = {
+          tersedia: this.schedules.filter((item) => item.status === "tersedia").length,
+          penuh: this.schedules.filter((item) => item.status === "penuh").length,
+          libur: this.schedules.filter((item) => item.status === "libur").length,
+        };
+      },
+
+      loadSchedules() {
+        const params = new URLSearchParams();
+        if (this.date) params.set("date", this.date);
+        if (this.barberId) params.set("barberId", this.barberId);
+
+        fetch(`/api/schedules?${params.toString()}`)
+          .then((response) => response.json())
+          .then((payload) => {
+            this.schedules = payload.schedules || [];
+            this.refreshStats();
+          })
+          .catch(() => {
+            this.message = "Gagal memuat jadwal";
+            this.messageType = "error";
+          });
+      },
+
+      generateSchedules() {
+        fetch("/api/admin/schedules/generate", {
+          method: "POST",
+          headers: this.headers(),
+          body: JSON.stringify({ date: this.date, barberId: this.barberId || null }),
+        })
+          .then(async (response) => {
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.message || "Generate gagal");
+            }
+            return payload;
+          })
+          .then((payload) => {
+            this.schedules = payload.schedules || [];
+            this.refreshStats();
+            this.message = "Slot jadwal berhasil digenerate";
+            this.messageType = "success";
+          })
+          .catch((error) => {
+            this.message = error.message;
+            this.messageType = "error";
+          });
+      },
+
+      changeStatus(scheduleId, status) {
+        fetch(`/api/admin/schedules/${scheduleId}`, {
+          method: "PATCH",
+          headers: this.headers(),
+          body: JSON.stringify({ status }),
+        })
+          .then(async (response) => {
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.message || "Gagal mengubah status");
+            }
+            return payload;
+          })
+          .then(() => {
+            this.loadSchedules();
+            this.message = "Status jadwal diperbarui";
+            this.messageType = "success";
+          })
+          .catch((error) => {
+            this.message = error.message;
+            this.messageType = "error";
+          });
+      },
+
+      init() {
+        this.refreshStats();
+      },
+    };
+  }
+</script>

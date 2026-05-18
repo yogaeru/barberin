@@ -1,0 +1,212 @@
+<section class="space-y-6" x-data="adminQueueApp()" x-init="init()" x-cloak>
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">
+      Operasional Harian
+    </p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Daftar Antrian</h2>
+    <p class="text-base-content/70 max-w-3xl">
+      Lihat urutan pelanggan yang sedang menunggu, sedang dipanggil, dan sedang
+      dikerjakan. Data mengikuti booking frontend secara realtime.
+    </p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Total Antrian</p>
+      <h3
+        class="text-3xl font-bold text-primary mt-2"
+        x-text="queue.length"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Sedang Dipanggil</p>
+      <h3
+        class="text-3xl font-bold text-warning mt-2"
+        x-text="queue.filter((item) => item.statusBooking === 'pending').length"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Sedang Dikerjakan</p>
+      <h3
+        class="text-3xl font-bold text-info mt-2"
+        x-text="queue.filter((item) => item.statusBooking === 'dalam_proses').length"
+      ></h3>
+    </div>
+  </section>
+
+  <section
+    class="bg-base-100/20 backdrop-blur-sm rounded-2xl border border-base-content/10 overflow-hidden"
+  >
+    <div
+      class="flex items-center justify-between px-5 py-4 border-b border-base-content/10"
+    >
+      <h3 class="text-xl font-semibold">Detail Antrian</h3>
+      <a href="/admin" class="text-sm text-primary font-semibold"
+        >Kembali ke ringkasan</a
+      >
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr class="text-base-content/60">
+            <th>No</th>
+            <th>Pelanggan</th>
+            <th>Layanan</th>
+            <th>Kapster</th>
+            <th>Waktu</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="item in queue" :key="item.bookingId">
+            <tr>
+              <td>
+                <span
+                  class="font-bold text-primary"
+                  x-text="'#' + item.nomorAntrian"
+                ></span>
+              </td>
+              <td>
+                <div
+                  class="font-semibold"
+                  x-text="item.userName || item.userEmail"
+                ></div>
+                <div
+                  class="text-xs text-base-content/60"
+                  x-text="item.bookingId"
+                ></div>
+              </td>
+              <td x-text="item.serviceName"></td>
+              <td x-text="item.barberName"></td>
+              <td x-text="item.jamBooking"></td>
+              <td>
+                <span
+                  class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold"
+                  :class="statusClass(item.statusBooking)"
+                  x-text="statusLabel(item.statusBooking)"
+                ></span>
+              </td>
+              <td>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    class="btn btn-xs btn-primary"
+                    @click="setStatus(item, 'dalam_proses')"
+                  >
+                    Panggil
+                  </button>
+                  <button
+                    class="btn btn-xs btn-outline"
+                    @click="setStatus(item, 'selesai')"
+                  >
+                    Selesai
+                  </button>
+                  <button
+                    class="btn btn-xs btn-ghost text-error"
+                    @click="setStatus(item, 'dibatalkan')"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<script>
+  function adminQueueApp() {
+    return {
+      currentPage: "admin-queue",
+      queue: <%- JSON.stringify(queue || []) %>,
+
+      get token() {
+        return localStorage.getItem("barbersync-token") || "";
+      },
+
+      headers() {
+        return {
+          "Content-Type": "application/json",
+          ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+        };
+      },
+
+      statusClass(status) {
+        switch (status) {
+          case "pending":
+            return "bg-warning/20 text-warning border-warning/30";
+          case "dalam_proses":
+            return "bg-primary/20 text-primary border-primary/30";
+          case "selesai":
+            return "bg-success/20 text-success border-success/30";
+          case "dibatalkan":
+            return "bg-error/20 text-error border-error/30";
+          default:
+            return "bg-base-300 text-base-content/70";
+        }
+      },
+
+      statusLabel(status) {
+        switch (status) {
+          case "pending":
+            return "Menunggu";
+          case "dalam_proses":
+            return "Sedang Dikerjakan";
+          case "selesai":
+            return "Selesai";
+          case "dibatalkan":
+            return "Dibatalkan";
+          default:
+            return status;
+        }
+      },
+
+      refresh() {
+        fetch("/api/admin/dashboard", {
+          headers: this.headers(),
+        })
+          .then((response) => response.json())
+          .then((payload) => {
+            this.queue = payload.queue || [];
+          })
+          .catch(() => {
+            this.queue = this.queue || [];
+          });
+      },
+
+      setStatus(item, statusBooking) {
+        const rawBookingId = item.rawBookingId || item.bookingId;
+        fetch(`/api/admin/queue/${rawBookingId}/status`, {
+          method: "PATCH",
+          headers: this.headers(),
+          body: JSON.stringify({ statusBooking }),
+        })
+          .then(async (response) => {
+            const payload = await response.json();
+            if (!response.ok) {
+              throw new Error(payload.message || "Gagal memperbarui status");
+            }
+
+            return payload;
+          })
+          .then(() => this.refresh())
+          .catch((error) => {
+            alert(error.message);
+          });
+      },
+
+      init() {
+        this.refresh();
+      },
+    };
+  }
+</script>

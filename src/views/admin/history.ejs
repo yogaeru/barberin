@@ -1,0 +1,41 @@
+<section class="space-y-6">
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">Transaksi</p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Riwayat Transaksi</h2>
+    <p class="text-base-content/70 max-w-3xl">Rekap layanan yang selesai, dibatalkan, dan nilai transaksi harian.</p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Transaksi Selesai</p>
+      <h3 class="text-3xl font-bold text-success mt-2"><%= history.filter((item) => item.statusLabel === 'Selesai').length %></h3>
+    </div>
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Transaksi Batal</p>
+      <h3 class="text-3xl font-bold text-error mt-2"><%= history.filter((item) => item.statusLabel === 'Dibatalkan').length %></h3>
+    </div>
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Total Nilai</p>
+      <h3 class="text-3xl font-bold text-primary mt-2">Rp <%= Number(history.reduce((total, item) => total + item.amount, 0)).toLocaleString('id-ID') %></h3>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <% history.forEach((item) => { %>
+      <article class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="space-y-1">
+          <div class="flex items-center gap-3 flex-wrap">
+            <h3 class="text-lg font-semibold"><%= item.customer %></h3>
+            <span class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold <%= item.statusClass %>"><%= item.statusLabel %></span>
+          </div>
+          <p class="text-sm text-base-content/70"><%= item.service %> • <%= item.barber %></p>
+          <p class="text-xs text-base-content/60"><%= item.completedAt %> • <%= item.id %></p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-base-content/60">Nominal</p>
+          <p class="text-2xl font-bold text-primary">Rp <%= Number(item.amount).toLocaleString('id-ID') %></p>
+        </div>
+      </article>
+    <% }) %>
+  </section>
+</section>

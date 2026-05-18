@@ -1,0 +1,57 @@
+<section class="space-y-6">
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">Pembayaran</p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Daftar Order</h2>
+    <p class="text-base-content/70 max-w-3xl">Pantau order yang sudah dibayar, menunggu, atau direfund dari transaksi layanan.</p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Nilai Order</p>
+      <h3 class="text-3xl font-bold text-primary mt-2">Rp <%= Number(orders.reduce((total, order) => total + order.amount, 0)).toLocaleString('id-ID') %></h3>
+    </div>
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Order Lunas</p>
+      <h3 class="text-3xl font-bold text-success mt-2"><%= orders.filter((order) => order.statusLabel === 'Lunas').length %></h3>
+    </div>
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Menunggu Verifikasi</p>
+      <h3 class="text-3xl font-bold text-warning mt-2"><%= orders.filter((order) => order.statusLabel === 'Menunggu').length %></h3>
+    </div>
+  </section>
+
+  <section class="bg-base-100/20 backdrop-blur-sm rounded-2xl border border-base-content/10 overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-base-content/10">
+      <h3 class="text-xl font-semibold">Order Terbaru</h3>
+      <span class="text-sm text-base-content/60">Update real-time</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr class="text-base-content/60">
+            <th>Order</th>
+            <th>Pelanggan</th>
+            <th>Layanan</th>
+            <th>Nominal</th>
+            <th>Pembayaran</th>
+            <th>Waktu</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach((order) => { %>
+            <tr>
+              <td class="font-semibold"><%= order.id %></td>
+              <td><%= order.customer %></td>
+              <td><%= order.service %></td>
+              <td>Rp <%= Number(order.amount).toLocaleString('id-ID') %></td>
+              <td><%= order.payment %></td>
+              <td><%= order.time %></td>
+              <td><span class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold <%= order.statusClass %>"><%= order.statusLabel %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

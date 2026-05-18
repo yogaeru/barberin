@@ -1,0 +1,63 @@
+<div
+  class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4 lg:hidden"
+>
+  <div
+    class="flex items-center justify-between px-3 py-3 rounded-[2rem] bg-base-200/20 backdrop-blur border border-base-content/10 shadow-2xl"
+  >
+    <a href="/" class="flex flex-col items-center justify-center w-16">
+      <div
+        class="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300"
+        :class="'<%= currentPage %>' === 'index' ? 'text-primary bg-primary/10' : 'text-base-content/60'"
+      >
+        🏠
+      </div>
+      <span
+        class="text-[11px] mt-1 transition"
+        :class="'<%= currentPage %>' === 'index' ? 'text-primary font-semibold' : 'text-base-content/50'"
+        >Beranda</span
+      >
+    </a>
+
+    <a href="/booking" class="flex flex-col items-center justify-center w-16">
+      <div
+        class="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300"
+        :class="'<%= currentPage %>' === 'booking' ? 'text-primary bg-primary/10' : 'text-base-content/60'"
+      >
+        📅
+      </div>
+      <span
+        class="text-[11px] mt-1 transition"
+        :class="'<%= currentPage %>' === 'booking' ? 'text-primary font-semibold' : 'text-base-content/50'"
+        >Booking</span
+      >
+    </a>
+
+    <a href="/status" class="flex flex-col items-center justify-center w-16">
+      <div
+        class="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 -mt-8 border-4 border-base-100/30"
+        :class="'<%= currentPage %>' === 'status' ? 'text-primary bg-primary/20 border-primary/30' : 'text-base-content/70 bg-base-300'"
+      >
+        ⏳
+      </div>
+      <span
+        class="text-[11px] mt-1 transition"
+        :class="'<%= currentPage %>' === 'status' ? 'text-primary font-semibold' : 'text-base-content/50'"
+        >Antrian</span
+      >
+    </a>
+
+    <a href="/about" class="flex flex-col items-center justify-center w-16">
+      <div
+        class="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300"
+        :class="'<%= currentPage %>' === 'about' ? 'text-primary bg-primary/10' : 'text-base-content/60'"
+      >
+        👤
+      </div>
+      <span
+        class="text-[11px] mt-1 transition"
+        :class="'<%= currentPage %>' === 'about' ? 'text-primary font-semibold' : 'text-base-content/50'"
+        >Profil</span
+      >
+    </a>
+  </div>
+</div>

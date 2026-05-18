@@ -1,0 +1,120 @@
+<section class="space-y-6" x-data="adminUsersApp()" x-init="init()" x-cloak>
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">
+      Manajemen Akun
+    </p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Daftar Pengguna</h2>
+    <p class="text-base-content/70 max-w-3xl">
+      Kelola akun yang tersimpan di browser. Data ini sinkron dengan login,
+      profil, dan pendaftaran.
+    </p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Total Pengguna</p>
+      <h3
+        class="text-3xl font-bold text-primary mt-2"
+        x-text="users.length"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">User</p>
+      <h3
+        class="text-3xl font-bold text-success mt-2"
+        x-text="users.filter((user) => user.role === 'user').length"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Admin</p>
+      <h3
+        class="text-3xl font-bold text-info mt-2"
+        x-text="users.filter((user) => user.role === 'admin').length"
+      ></h3>
+    </div>
+  </section>
+
+  <section
+    class="bg-base-100/20 backdrop-blur-sm rounded-2xl border border-base-content/10 overflow-hidden"
+  >
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-5 py-4 border-b border-base-content/10"
+    >
+      <div>
+        <h3 class="text-xl font-semibold">Data Pengguna</h3>
+        <p class="text-sm text-base-content/60">
+          Perubahan dari profil akan tampil di sini setelah tersimpan.
+        </p>
+      </div>
+      <button class="btn btn-sm btn-primary" @click="refreshUsers()">
+        Muat Ulang
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr class="text-base-content/60">
+            <th>Nama</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Total Booking</th>
+            <th>Aktif Terakhir</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="user in users" :key="user.email">
+            <tr>
+              <td class="font-semibold" x-text="user.name"></td>
+              <td x-text="user.email"></td>
+              <td x-text="roleLabel(user.role)"></td>
+              <td x-text="user.bookings"></td>
+              <td x-text="user.lastActive"></td>
+              <td>
+                <span
+                  class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold"
+                  :class="user.statusClass"
+                  x-text="user.statusLabel"
+                ></span>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<script>
+  function adminUsersApp() {
+    return {
+      currentPage: "admin-users",
+      users: <%- JSON.stringify(users || []) %>,
+
+      roleLabel(role) {
+        switch (role) {
+          case "admin":
+            return "Admin";
+          case "user":
+            return "User";
+          default:
+            return role;
+        }
+      },
+
+      refreshUsers() {
+        this.users = <%- JSON.stringify(users || []) %>;
+      },
+
+      init() {
+        this.refreshUsers();
+      },
+    };
+  }
+</script>

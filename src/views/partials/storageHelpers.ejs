@@ -1,0 +1,446 @@
+<script type="application/json" id="barbersync-demo-users">
+  <%- JSON.stringify(demoUsers) %>
+</script>
+<script>
+  window.BarberSyncStore =
+    window.BarberSyncStore ||
+    (() => {
+      const userKey = "barbersync-user";
+      const usersKey = "barbersync-users";
+      const queueIndexKey = "barbersync-queue-index";
+      const queuePrefix = "barbersync-queue:";
+      const eventName = "barbersync-store-change";
+
+      const demoUsersElement = document.getElementById("barbersync-demo-users");
+      const defaultUsers = demoUsersElement
+        ? JSON.parse(demoUsersElement.textContent || "[]")
+        : [];
+
+      const clone = (value) => JSON.parse(JSON.stringify(value));
+
+      const safeParse = (raw, fallback) => {
+        try {
+          return raw ? JSON.parse(raw) : fallback;
+        } catch (error) {
+          return fallback;
+        }
+      };
+
+      const emitChange = (key) => {
+        window.dispatchEvent(new CustomEvent(eventName, { detail: { key } }));
+      };
+
+      const displayName = (user) => user?.name || user?.nama || "";
+
+      const statusDefaults = (role) =>
+        role === "admin"
+          ? {
+              statusLabel: "Staff",
+              statusClass: "bg-primary/20 text-primary border-primary/30",
+            }
+          : {
+              statusLabel: "Aktif",
+              statusClass: "bg-success/20 text-success border-success/30",
+            };
+
+      const normalizeUser = (user = {}) => {
+        const resolvedName = displayName(user);
+        const normalizedRole = user.role || "user";
+        const defaults = statusDefaults(normalizedRole);
+
+        const usernameFromEmail = (user.email || "").split("@")[0] || "";
+        const resolvedUsername =
+          user.username ||
+          user.user ||
+          usernameFromEmail ||
+          resolvedName.toLowerCase().replace(/\s+/g, "-");
+
+        return {
+          username: resolvedUsername,
+          name: resolvedName,
+          nama: resolvedName,
+          email: user.email || "",
+          phone: user.phone || "-",
+          role: normalizedRole,
+          password: user.password || "",
+          bookings: Number(user.bookings) || 0,
+          lastActive: user.lastActive || "Baru saja",
+          statusLabel: user.statusLabel || defaults.statusLabel,
+          statusClass: user.statusClass || defaults.statusClass,
+        };
+      };
+
+      const writeUsers = (users) => {
+        const normalizedUsers = users.map(normalizeUser);
+        localStorage.setItem(usersKey, JSON.stringify(normalizedUsers));
+        emitChange(usersKey);
+        return normalizedUsers;
+      };
+
+      const seedUsers = () => {
+        const storedUsers = safeParse(localStorage.getItem(usersKey), null);
+        if (!Array.isArray(storedUsers) || storedUsers.length === 0) {
+          return writeUsers(defaultUsers);
+        }
+
+        return writeUsers(storedUsers);
+      };
+
+      const getUsers = () => clone(seedUsers());
+
+      const getCurrentUser = () =>
+        normalizeUser(safeParse(localStorage.getItem(userKey), null));
+
+      const setCurrentUser = (user) => {
+        const normalizedUser = normalizeUser(user);
+        localStorage.setItem(userKey, JSON.stringify(normalizedUser));
+        emitChange(userKey);
+        return normalizedUser;
+      };
+
+      const clearCurrentUser = () => {
+        localStorage.removeItem(userKey);
+        emitChange(userKey);
+      };
+
+      const syncUserRecord = (updatedUser, previousIdentifier = null) => {
+        const users = seedUsers();
+        const target =
+          previousIdentifier || updatedUser.username || updatedUser.email;
+        const index = users.findIndex(
+          (user) => user.username === target || user.email === target,
+        );
+        const password =
+          index >= 0 ? users[index].password : updatedUser.password || "";
+        const mergedUser = normalizeUser({
+          ...(index >= 0 ? users[index] : {}),
+          ...updatedUser,
+          password,
+        });
+
+        if (index >= 0) {
+          users[index] = mergedUser;
+        } else {
+          users.unshift(mergedUser);
+        }
+
+        writeUsers(users);
+        return mergedUser;
+      };
+
+      const updateProfile = (previousIdentifier, updates = {}) => {
+        const users = seedUsers();
+        const index = users.findIndex(
+          (user) =>
+            user.username === previousIdentifier ||
+            user.email === previousIdentifier,
+        );
+        if (index === -1) {
+          return { ok: false, message: "Profil tidak ditemukan" };
+        }
+
+        const usernameInUse = updates.username
+          ? users.some(
+              (user, userIndex) =>
+                user.username === updates.username && userIndex !== index,
+            )
+          : false;
+        if (usernameInUse) {
+          return { ok: false, message: "Username sudah digunakan akun lain" };
+        }
+
+        const emailInUse = updates.email
+          ? users.some(
+              (user, userIndex) =>
+                user.email === updates.email && userIndex !== index,
+            )
+          : false;
+        if (emailInUse) {
+          return { ok: false, message: "Email sudah digunakan akun lain" };
+        }
+
+        const mergedUser = normalizeUser({ ...users[index], ...updates });
+
+        users[index] = mergedUser;
+        writeUsers(users);
+
+        const currentUser = getCurrentUser();
+        if (
+          currentUser.username === mergedUser.username ||
+          currentUser.email === mergedUser.email
+        ) {
+          setCurrentUser({
+            ...mergedUser,
+            password: currentUser.password || mergedUser.password,
+          });
+        }
+
+        return { ok: true, user: mergedUser };
+      };
+
+      const changePassword = (identifier, currentPassword, newPassword) => {
+        const users = seedUsers();
+        const index = users.findIndex(
+          (user) =>
+            (user.username === identifier || user.email === identifier) &&
+            user.password === currentPassword,
+        );
+
+        if (index === -1) {
+          return { ok: false, message: "Kata sandi saat ini salah" };
+        }
+
+        users[index].password = newPassword;
+        writeUsers(users);
+
+        const currentUser = getCurrentUser();
+        if (
+          currentUser.username === users[index].username ||
+          currentUser.email === users[index].email
+        ) {
+          setCurrentUser({ ...currentUser, password: newPassword });
+        }
+
+        return { ok: true };
+      };
+
+      const login = (identifier, password) => {
+        const users = seedUsers();
+        const user = users.find(
+          (item) =>
+            (item.username === identifier || item.email === identifier) &&
+            item.password === password,
+        );
+
+        if (!user) {
+          return { ok: false, message: "Username/Email atau kata sandi salah" };
+        }
+
+        const updatedUser = syncUserRecord(
+          { ...user, lastActive: "Baru saja" },
+          user.username || user.email,
+        );
+        setCurrentUser(updatedUser);
+
+        return { ok: true, user: updatedUser };
+      };
+
+      const register = ({ username, name, email, phone, password }) => {
+        const users = seedUsers();
+        if (username && users.some((user) => user.username === username)) {
+          return { ok: false, message: "Username sudah terdaftar" };
+        }
+        if (email && users.some((user) => user.email === email)) {
+          return { ok: false, message: "Email sudah terdaftar" };
+        }
+
+        const newUser = syncUserRecord({
+          username,
+          name,
+          nama: name,
+          email,
+          phone,
+          role: "user",
+          password,
+          bookings: 0,
+          lastActive: "Baru saja",
+        });
+        setCurrentUser(newUser);
+
+        return { ok: true, user: newUser };
+      };
+
+      const getUserIdentifier = (user = getCurrentUser()) =>
+        user?.username || user?.email || "guest";
+
+      const getQueueKey = (user = getCurrentUser()) =>
+        `${queuePrefix}${getUserIdentifier(user)}`;
+
+      const getQueueIndex = () =>
+        safeParse(localStorage.getItem(queueIndexKey), []);
+
+      const writeQueueIndex = (queueItems) => {
+        localStorage.setItem(queueIndexKey, JSON.stringify(queueItems));
+        emitChange(queueIndexKey);
+        return queueItems;
+      };
+
+      const normalizeQueueItem = (queueItem = {}, owner = getCurrentUser()) => {
+        const ownerEmail = queueItem.userEmail || owner?.email || "guest";
+        const ownerName =
+          queueItem.userName || owner?.nama || owner?.name || "Pengguna";
+        const queueNumber =
+          Number(queueItem.nomorAntrian || queueItem.queueNumber || 1) || 1;
+        const currentNumber =
+          Number(queueItem.currentNumber || queueNumber) || queueNumber;
+        const totalQueue =
+          Number(queueItem.totalQueue || queueNumber) || queueNumber;
+
+        return {
+          bookingId: queueItem.bookingId || `BK-${Date.now()}`,
+          userEmail: ownerEmail,
+          userName: ownerName,
+          nomorAntrian: queueNumber,
+          currentNumber,
+          totalQueue,
+          serviceId: queueItem.serviceId || null,
+          serviceName: queueItem.serviceName || "Potong Rambut",
+          barberId: queueItem.barberId || null,
+          barberName: queueItem.barberName || "Ahmad Syaiful",
+          date: queueItem.date || new Date().toISOString().split("T")[0],
+          time: queueItem.time || queueItem.jamBooking || "14:30",
+          jamBooking: queueItem.jamBooking || queueItem.time || "14:30",
+          harga: Number(queueItem.harga) || 0,
+          catatan: queueItem.catatan || "",
+          statusBooking:
+            queueItem.statusBooking || queueItem.status || "pending",
+          estimasiWaktu: queueItem.estimasiWaktu || "20-30 menit",
+          progress: Number(queueItem.progress) || 100,
+        };
+      };
+
+      const getCurrentUserQueue = (user = getCurrentUser()) => {
+        const key = getQueueKey(user);
+        const stored = safeParse(localStorage.getItem(key), []);
+        const normalized = Array.isArray(stored)
+          ? stored.slice(0, 1).map((item) => normalizeQueueItem(item, user))
+          : stored
+            ? [normalizeQueueItem(stored, user)]
+            : [];
+        return normalized;
+      };
+
+      const setCurrentUserQueue = (queueItems, user = getCurrentUser()) => {
+        const normalizedItems = Array.isArray(queueItems)
+          ? queueItems.slice(0, 1).map((item) => normalizeQueueItem(item, user))
+          : [normalizeQueueItem(queueItems, user)];
+
+        localStorage.setItem(
+          getQueueKey(user),
+          JSON.stringify(normalizedItems),
+        );
+        emitChange(getQueueKey(user));
+
+        const queueIndex = getQueueIndex().filter(
+          (item) => item.userEmail !== normalizedItems[0]?.userEmail,
+        );
+        if (normalizedItems[0]) {
+          queueIndex.unshift(normalizedItems[0]);
+        }
+        writeQueueIndex(queueIndex);
+        return normalizedItems;
+      };
+
+      const removeCurrentUserQueue = (user = getCurrentUser()) => {
+        const identifier = getUserIdentifier(user);
+        localStorage.removeItem(getQueueKey(user));
+        emitChange(getQueueKey(user));
+
+        const queueIndex = getQueueIndex().filter(
+          (item) => item.userEmail !== identifier,
+        );
+        writeQueueIndex(queueIndex);
+      };
+
+      const getAllQueueEntries = () => {
+        const queueIndex = getQueueIndex();
+        const normalized = queueIndex
+          .filter(Boolean)
+          .map((item) => normalizeQueueItem(item));
+        if (normalized.length > 0) {
+          writeQueueIndex(normalized);
+        }
+        return clone(normalized);
+      };
+
+      const upsertQueueEntry = (queueItem, user = getCurrentUser()) => {
+        const normalizedItem = normalizeQueueItem(queueItem, user);
+        const queueIndex = getQueueIndex().filter(
+          (item) => item.userEmail !== normalizedItem.userEmail,
+        );
+        queueIndex.unshift(normalizedItem);
+        writeQueueIndex(queueIndex);
+        localStorage.setItem(
+          getQueueKey(user),
+          JSON.stringify([normalizedItem]),
+        );
+        emitChange(getQueueKey(user));
+        return normalizedItem;
+      };
+
+      const removeQueueEntry = (bookingId) => {
+        const existingQueueIndex = getQueueIndex();
+        const targetItem = existingQueueIndex.find(
+          (item) => item.bookingId === bookingId,
+        );
+        const queueIndex = existingQueueIndex.filter(
+          (item) => item.bookingId !== bookingId,
+        );
+        writeQueueIndex(queueIndex);
+
+        if (targetItem) {
+          const targetUser = {
+            email: targetItem.userEmail,
+            nama: targetItem.userName,
+            role: "user",
+          };
+          const targetQueueKey = getQueueKey(targetUser);
+          const targetQueue = getCurrentUserQueue(targetUser);
+          const remainingTargetQueue = targetQueue.filter(
+            (item) => item.bookingId !== bookingId,
+          );
+          localStorage.setItem(
+            targetQueueKey,
+            JSON.stringify(remainingTargetQueue),
+          );
+          emitChange(targetQueueKey);
+        }
+        return queueIndex;
+      };
+
+      const subscribe = (callback) => {
+        const handler = (event) => callback(event.detail?.key || null);
+        const storageHandler = (event) => {
+          if (
+            event.key === userKey ||
+            event.key === usersKey ||
+            event.key === queueIndexKey ||
+            (event.key || "").startsWith(queuePrefix)
+          ) {
+            callback(event.key || null);
+          }
+        };
+
+        window.addEventListener(eventName, handler);
+        window.addEventListener("storage", storageHandler);
+
+        return () => {
+          window.removeEventListener(eventName, handler);
+          window.removeEventListener("storage", storageHandler);
+        };
+      };
+
+      return {
+        seedUsers,
+        getUsers,
+        getCurrentUser,
+        setCurrentUser,
+        clearCurrentUser,
+        syncUserRecord,
+        updateProfile,
+        changePassword,
+        login,
+        register,
+        getUserIdentifier,
+        getQueueKey,
+        getCurrentUserQueue,
+        setCurrentUserQueue,
+        removeCurrentUserQueue,
+        getAllQueueEntries,
+        upsertQueueEntry,
+        removeQueueEntry,
+        subscribe,
+        normalizeUser,
+      };
+    })();
+</script>

@@ -1,0 +1,466 @@
+<div 
+  class="flex-1 min-w-0 max-h-screen overflow-scroll" 
+  x-data="bookingApp()" 
+  x-init="init()">
+  <!-- Hero Section -->
+  <div
+    class="relative w-full h-[250px] bg-gradient-to-br from-primary/20 to-base-300 overflow-hidden flex items-center justify-center"
+  >
+    <div class="absolute inset-0 opacity-50"></div>
+    <span
+      class="text-[80px] relative z-10 drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+      >✂️</span
+    >
+    <div
+      class="absolute top-0 left-0 w-full flex justify-between items-center px-5 pt-6 z-20"
+    >
+      <button
+        class="w-10 h-10 rounded-full bg-base-200/80 backdrop-blur-sm border border-white/10 flex items-center justify-center text-base-content hover:text-primary transition-colors"
+        onclick="history.back()"
+      >
+        <-
+      </button>
+      <h1 class="font-['Noto_Serif'] text-[20px] font-bold text-base-content">
+        Booking Layanan
+      </h1>
+      <div class="w-10"></div>
+    </div>
+  </div>
+
+  <main class="flex-1 px-5 mt-[-20px] relative z-20 flex flex-col gap-6 pb-32">
+    <!-- Login Required Modal -->
+    <template x-if="!isLoggedIn">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div class="w-full max-w-md rounded-2xl border-2 border-base-content/10 bg-base-100 p-6 text-center shadow-2xl">
+          <div class="text-4xl mb-3">🔒</div>
+          <h2 class="font-serif text-2xl font-semibold text-base-content">Belum Login</h2>
+          <p class="mt-2 text-sm text-base-content/70">Silakan masuk terlebih dahulu untuk membuat booking.</p>
+          <a href="/login" class="btn btn-primary mt-5 w-full">Masuk ke Akun</a>
+        </div>
+      </div>
+    </template>
+
+    <!-- Barbershop Info -->
+    <div>
+      <div class="flex justify-between items-start mb-2">
+        <h1
+          class="font-['Noto_Serif'] text-[28px] leading-[36px] font-semibold text-base-content"
+        >
+          Barbersync Premium
+        </h1>
+        <div
+          class="flex items-center bg-base-100/20 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-base-content/10"
+        >
+          <span>⭐</span>
+          <span
+            class="font-[Manrope] text-[14px] font-semibold text-base-content"
+            >4.9</span
+          >
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-3 font-[Manrope] text-[14px] font-semibold text-base-content/70"
+      >
+        <span class="flex items-center gap-1"
+          >📍</span
+          >1.2 km</span
+        >
+        <span class="w-1 h-1 rounded-full bg-base-content/60"></span>
+        <span class="flex items-center gap-1 text-success"
+          >✅</span
+          >Buka</span
+        >
+      </div>
+    </div>
+
+    <!-- Active Bookings Badge -->
+    <template x-if="userBookings.length > 0">
+      <div
+        class="bg-warning/20 border border-warning/50 rounded-lg p-3 flex items-center gap-2"
+      >
+        ℹ️
+        <div>
+          <p class="font-semibold text-warning text-sm">
+            Anda hanya dapat memiliki 1 booking aktif. Batalkan booking lama sebelum membuat booking baru.
+          </p>
+        </div>
+      </div>
+    </template>
+   
+
+    <!-- Messages -->
+    <template x-if="message">
+      <div
+        class="alert"
+        :class="messageType === 'error' ? 'alert-error' : 'alert-success'"
+        x-text="message"
+        @click="message = null"
+      ></div>
+    </template>
+
+    <!-- Service Selection -->
+    <div class="flex flex-col gap-3">
+      <h2
+        class="font-['Noto_Serif'] text-[22px] font-semibold text-base-content mb-2"
+      >
+        Pilih Layanan
+      </h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+      <template x-for="s in services" :key="s.serviceId">
+        <div
+           class="bg-base-100/20 backdrop-blur-sm p-4 rounded-2xl border-2 flex justify-between items-center cursor-pointer transition-colors"
+          :class="selectedService === s.serviceId ? 'border-primary bg-primary/5' : 'border-base-content/10 hover:border-primary/30'"
+          @click="selectedService = s.serviceId; selectedServiceName = s.namaService; selectedServiceHarga = s.harga"
+        >
+          <div class="flex flex-col gap-1">
+            <div
+              class="font-[Manrope] text-[16px] text-base-content font-semibold"
+              x-text="s.namaService"
+            ></div>
+            <div
+              class="font-[Manrope] text-[12px] font-medium text-base-content/70 flex items-center gap-1"
+            >
+              ⏱️
+              <span x-text="s.durasi + ' Min'"></span>
+              <span
+                class="text-base-content/50 ml-1"
+                x-text="s.deskripsi ? '• ' + s.deskripsi : ''"
+              ></span>
+            </div>
+          </div>
+          <div
+            class="font-[Manrope] text-[14px] font-semibold text-primary"
+            x-text="'Rp ' + Number(s.harga).toLocaleString('id-ID')"
+          ></div>
+        </div>
+      </template>
+    </div>
+    </div>
+
+    <!-- Barber Selection -->
+    <div class="flex flex-col gap-3">
+      <h2
+        class="font-['Noto_Serif'] text-[22px] font-semibold text-base-content mb-2"
+      >
+        Pilih Kapster
+      </h2>
+      <div
+        class="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-5 px-5 snap-x lg:grid lg:grid-cols-5 xl:grid-cols-7 lg:overflow-x-visible lg:mx-0 lg:px-0"
+      >
+        <div
+          class="flex flex-col items-center gap-2 min-w-[72px] snap-start cursor-pointer"
+          :class="selectedBarber === 0 ? 'opacity-100' : 'opacity-60'"
+          @click="setBarber(null, 'Siapa Saja')"
+        >
+          <div
+            class="w-[72px] h-[72px] rounded-full border-2 flex items-center justify-center"
+            :class="selectedBarber === 0 ? 'border-primary shadow-[0_0_15px_rgba(200,151,58,0.2)]' : 'border-transparent bg-base-100/20 backdrop-blur-sm'"
+          >
+            🔀
+          </div>
+          <span
+            class="font-[Manrope] text-[12px] font-medium"
+            :class="selectedBarber === 0 ? 'text-primary font-semibold' : 'text-base-content/70'"
+            >Siapa Saja</span
+          >
+        </div>
+        <template x-for="b in barbers" :key="b.barberId || b.id">
+          <div
+            class="flex flex-col items-center gap-2 min-w-[72px] snap-start"
+            :class="selectedBarber === (b.barberId || b.id) ? 'opacity-100' : (b.availableToday ? 'opacity-90 cursor-pointer' : 'opacity-40 cursor-not-allowed')"
+            @click="if (b.availableToday) { setBarber(b.barberId || b.id, b.name) }"
+          >
+            <div
+              class="w-[72px] h-[72px] rounded-full border-2 overflow-hidden flex items-center justify-center text-2xl bg-base-100/20 backdrop-blur-sm"
+              :class="selectedBarber === (b.barberId || b.id) ? 'border-primary shadow-[0_0_15px_rgba(200,151,58,0.2)]' : 'border-transparent'"
+            >
+              <span
+                x-text="(b.name.charAt(0) || '').toUpperCase() + (b.name.charAt(1) || '')"
+              ></span>
+            </div>
+            <span
+              class="font-[Manrope] text-[12px] font-medium"
+              :class="selectedBarber === (b.barberId || b.id) ? 'text-primary font-semibold' : 'text-base-content/70'"
+              x-text="b.name.split(' ')[0]"
+            ></span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Time Selection -->
+    <div class="flex flex-col gap-3">
+      <h2
+        class="font-['Noto_Serif'] text-[22px] font-semibold text-base-content mb-2"
+      >
+        Pilih Waktu Hari Ini
+      </h2>
+      <p class="text-sm text-base-content/70">
+        Booking hanya tersedia untuk hari ini. Pilih jam dari grid di bawah.
+      </p>
+
+      <!-- Time Slot Availability Grid -->
+      <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-2">
+        <template x-for="slot in timeSlotGrid" :key="slot.time">
+          <button
+            @click="bookingTime = slot.time"
+            :class="bookingTime === slot.time ? 'bg-primary/10 border-primary text-primary shadow-[0_0_0_1px_rgba(59,130,246,0.25)]' : (slot.available ? 'bg-base-100/20 backdrop-blur-sm border-base-content/10 hover:border-primary' : 'bg-base-300/50 opacity-50 cursor-not-allowed')"
+            :disabled="!slot.available"
+            class="p-3 rounded-2xl border-2 transition-colors text-center"
+          >
+            <div
+              class="font-[Manrope] text-[12px] font-semibold"
+              x-text="slot.time"
+            ></div>
+            <div
+              class="text-[10px] text-base-content/70"
+              x-text="slot.available ? 'Tersedia' : 'Penuh'"
+            ></div>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <!-- Catatan -->
+    <div class="flex flex-col gap-3">
+      <h2
+        class="font-['Noto_Serif'] text-[22px] font-semibold text-base-content mb-2"
+      >
+        Catatan (Opsional)
+      </h2>
+      <textarea
+        x-model="catatan"
+        class="textarea textarea-bordered w-full bg-base-100/20 backdrop-blur-sm"
+        placeholder="Contoh: Suka fade, hati-hati di kuping, dll..."
+        rows="2"
+      ></textarea>
+    </div>
+
+    <!-- Booking Summary & Submit -->
+    <div
+      class="bg-base-100/20 backdrop-blur-sm p-6 rounded-2xl border-2 border-base-content/10 bottom-32 lg:bottom-0"
+    >
+      <div class="space-y-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-base-content/70">Layanan:</span>
+          <span
+            class="font-semibold"
+            x-text="selectedServiceName || '-'"
+          ></span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-base-content/70">Kapster:</span>
+          <span class="font-semibold" x-text="selectedBarberName || '-'"></span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-base-content/70">Tanggal & Waktu:</span>
+          <span
+            class="font-semibold"
+            x-text="bookingTime ? todayDate + ' ' + bookingTime : '-'"
+          ></span>
+        </div>
+        <div class="divider my-2"></div>
+        <div class="flex justify-between text-lg">
+          <span class="font-semibold">Total:</span>
+          <span
+            class="font-semibold text-primary"
+            x-text="selectedServiceHarga ? 'Rp ' + Number(selectedServiceHarga).toLocaleString('id-ID') : 'Rp 0'"
+          ></span>
+        </div>
+      </div>
+      <button
+        @click="submitBooking()"
+        :disabled="!selectedService || !bookingTime || userBookings.length > 0"
+        class="btn btn-primary w-full mt-4"
+      >
+        <span x-show="userBookings.length === 0">Konfirmasi Booking</span>
+        <span x-show="userBookings.length > 0">Booking Aktif Tersedia</span>
+      </button>
+    </div>
+  </main>
+
+  <script type="application/json" id="barbers-data"><%- JSON.stringify(barbers || []) %></script>
+  <script type="application/json" id="schedules-data"><%- JSON.stringify(schedules || []) %></script>
+
+  <script>
+    function bookingApp() {
+      return {
+        currentPage: "booking",
+        theme: localStorage.getItem("barbersync-theme") || "coffee",
+        services: [
+          {
+            serviceId: 1,
+            namaService: "Potong Rambut",
+            harga: 50000,
+            durasi: 30,
+            deskripsi: "Potong rambut standar",
+          },
+          {
+            serviceId: 2,
+            namaService: "Fade Cream",
+            harga: 60000,
+            durasi: 35,
+            deskripsi: "Potongan fade dengan krim",
+          },
+          {
+            serviceId: 3,
+            namaService: "Beard Trim",
+            harga: 40000,
+            durasi: 20,
+            deskripsi: "Pemangkasan jenggot",
+          },
+        ],
+        barbers: [],
+        schedules: [],
+        selectedService: null,
+        selectedServiceName: "",
+        selectedServiceHarga: 0,
+        selectedBarber: 0,
+        selectedBarberName: "Siapa Saja",
+        bookingTime: "",
+        todayDate: new Date().toISOString().split("T")[0],
+        catatan: "",
+        message: "",
+        messageType: "success",
+        userBookings: [],
+        user: null,
+        timeSlotGrid: [],
+
+        get isLoggedIn() {
+          return !!this.user;
+        },
+
+        setTheme(value) {
+          this.theme = value;
+          document.documentElement.setAttribute("data-theme", value);
+          localStorage.setItem("barbersync-theme", value);
+        },
+
+        loadTimeSlots() {
+          const times = [];
+          for (let hour = 10; hour <= 21; hour += 1) {
+            times.push(`${String(hour).padStart(2, "0")}:30`);
+            if (hour < 21) {
+              times.push(`${String(hour + 1).padStart(2, "0")}:00`);
+            }
+          }
+
+          const normalizedSchedules = this.schedules || [];
+          const selectedBarberId = Number(this.selectedBarber || 0);
+
+          this.timeSlotGrid = times.map((time) => {
+            const available = normalizedSchedules.some((schedule) => {
+              const scheduleBarberId = Number(schedule.barberId || 0);
+              const matchesBarber = !selectedBarberId || scheduleBarberId === selectedBarberId;
+              return matchesBarber && schedule.time === time && schedule.status === "tersedia";
+            });
+
+            return { time, available };
+          });
+        },
+
+        setBarber(barberId, barberName) {
+          this.selectedBarber = barberId || 0;
+          this.selectedBarberName = barberName;
+          this.loadTimeSlots();
+        },
+
+        submitBooking() {
+          if (!this.selectedService || !this.bookingTime) {
+            this.message = "Silahkan lengkapi semua field yang diperlukan";
+            this.messageType = "error";
+            return;
+          }
+
+          if (!this.isLoggedIn) {
+            this.message = "Silakan login terlebih dahulu";
+            this.messageType = "error";
+            return;
+          }
+
+          if (this.userBookings.length > 0) {
+            this.message = "Anda hanya dapat memiliki 1 booking aktif. Batalkan booking lama terlebih dahulu.";
+            this.messageType = "error";
+            return;
+          }
+
+          const token = localStorage.getItem("barbersync-token");
+          if (!token) {
+            this.message = "Silakan login terlebih dahulu";
+            this.messageType = "error";
+            return;
+          }
+
+          fetch("/api/bookings", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              serviceId: this.selectedService,
+              barberId: this.selectedBarber || null,
+              date: this.todayDate,
+              time: this.bookingTime,
+              catatan: this.catatan,
+            }),
+          })
+            .then(async (response) => {
+              const payload = await response.json();
+              if (!response.ok) {
+                throw new Error(payload.message || "Booking gagal");
+              }
+
+              return payload;
+            })
+            .then((result) => {
+              const booking = result.booking;
+              this.userBookings = window.BarberSyncStore.setCurrentUserQueue(booking, this.user);
+              this.message = "Booking berhasil! Nomor booking: " + booking.bookingId;
+              this.messageType = "success";
+
+              setTimeout(() => {
+                window.location.href = "/status";
+              }, 1500);
+            })
+            .catch((error) => {
+              this.message = error.message;
+              this.messageType = "error";
+            });
+        },
+
+        init() {
+          this.setTheme(this.theme);
+          try {
+            const storedUser = window.BarberSyncStore.getCurrentUser();
+            if (storedUser && storedUser.email) {
+              this.user = storedUser;
+            }
+          } catch (e) {}
+          try {
+            const barberData = document.getElementById("barbers-data");
+            this.barbers = barberData ? JSON.parse(barberData.textContent || "[]") : [];
+            const scheduleData = document.getElementById("schedules-data");
+            this.schedules = scheduleData ? JSON.parse(scheduleData.textContent || "[]") : [];
+          } catch (e) {
+            this.barbers = [];
+            this.schedules = [];
+          }
+          this.loadTimeSlots();
+
+          try {
+            this.userBookings = window.BarberSyncStore.getCurrentUserQueue(this.user);
+          } catch (e) {}
+
+          this.unsubStore = window.BarberSyncStore.subscribe((key) => {
+            if (!this.user) return;
+            if (!key || key === window.BarberSyncStore.getQueueKey(this.user) || key === "barbersync-queue-index" || key === "barbersync-user") {
+              this.userBookings = window.BarberSyncStore.getCurrentUserQueue(this.user);
+              this.user = window.BarberSyncStore.getCurrentUser();
+            }
+          });
+        },
+      };
+    }
+  </script>
+</div>

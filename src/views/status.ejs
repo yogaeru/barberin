@@ -1,0 +1,388 @@
+<div
+  class="flex-1 min-w-0 max-h-screen overflow-scroll"
+  x-data="statusApp()"
+  x-init="init()"
+>
+  <main
+    class="flex-1 w-full max-w-5xl mx-auto px-5 py-6 flex flex-col gap-6 pb-32"
+  >
+    <!-- Login Required Modal -->
+    <template x-if="!isLoggedIn">
+      <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      >
+        <div
+          class="w-full max-w-md rounded-2xl border-2 border-base-content/10 bg-base-100 p-6 text-center shadow-2xl"
+        >
+          <div class="text-4xl mb-3">🔒</div>
+          <h2 class="font-serif text-2xl font-semibold text-base-content">
+            Belum Login
+          </h2>
+          <p class="mt-2 text-sm text-base-content/70">
+            Silakan masuk terlebih dahulu untuk melihat antrian.
+          </p>
+          <a href="/login" class="btn btn-primary mt-5 w-full">Masuk ke Akun</a>
+        </div>
+      </div>
+    </template>
+
+    <!-- Multi-Booking Tabs -->
+    <!-- <template x-if="queue.length > 0">
+      <div class="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 lg:mx-0 lg:px-0">
+        <template x-for="(booking, idx) in queue" :key="booking.bookingId">
+          <button
+            @click="selectedQueueIndex = idx"
+            :class="selectedQueueIndex === idx ? 'bg-primary text-primary-content border-primary' : 'bg-base-100/20 backdrop-blur-sm border-base-content/10'"
+            class="px-4 py-2 rounded-full border-2 font-medium text-sm whitespace-nowrap transition-colors"
+          >
+            <span x-text="'Booking #' + (idx + 1)"></span>
+          </button>
+        </template>
+      </div>
+    </template> -->
+
+    <!-- Queue Info -->
+    <template x-if="queue.length > 0 && currentQueue">
+      <div>
+        <!-- Current Queue Number -->
+        <section
+          class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden border-2 border-base-content/10"
+        >
+          <div
+            class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"
+          ></div>
+          <p class="text-sm font-semibold font-sans text-base-content/70 mb-2">
+            Nomor Antrian Anda
+          </p>
+          <h2
+            class="text-6xl font-bold font-serif text-primary mb-4 drop-shadow-[0_0_15px_rgba(200,151,58,0.3)]"
+            x-text="String(currentQueue.nomorAntrian).padStart(2, '0')"
+          ></h2>
+          <div
+            class="w-full max-w-[200px] h-2 bg-base-300 rounded-full overflow-hidden mb-4"
+          >
+            <div
+              class="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(200,151,58,0.6)]"
+              :style="'width: ' + currentQueue.progress + '%'"
+            ></div>
+          </div>
+          <p
+            class="text-base font-sans text-base-content flex items-center gap-2"
+          >
+            ⏳
+            <span
+              x-text="'Estimasi waktu: ' + currentQueue.estimasiWaktu"
+            ></span>
+          </p>
+        </section>
+
+        <!-- Queue Status Grid -->
+        <section class="grid grid-cols-3 gap-2 sm:gap-3 mt-6">
+          <div
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center border-2 border-base-content/10"
+          >
+            <span class="text-xs font-sans text-base-content/70 mb-1"
+              >Antrian Sekarang</span
+            >
+            <span
+              class="text-3xl font-semibold font-serif text-base-content"
+              x-text="String(currentQueue.currentNumber).padStart(2, '0')"
+            ></span>
+          </div>
+          <div
+            class="bg-primary/10 rounded-lg p-4 flex flex-col items-center justify-center border border-primary/30 relative overflow-hidden shadow-[0_0_10px_rgba(200,151,58,0.1)]"
+          >
+            <div
+              class="absolute -right-2 -top-2 w-8 h-8 bg-primary rounded-full opacity-20 blur-xl"
+            ></div>
+            <span class="text-xs font-sans text-primary mb-1">Anda</span>
+            <span
+              class="text-3xl font-semibold font-serif text-primary"
+              x-text="String(currentQueue.nomorAntrian).padStart(2, '0')"
+            ></span>
+          </div>
+          <div
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center border-2 border-base-content/10"
+          >
+            <span class="text-xs font-sans text-base-content/70 mb-1"
+              >Sisa Antrian</span
+            >
+            <span
+              class="text-3xl font-semibold font-serif text-base-content"
+              x-text="String(Math.max(0, currentQueue.totalQueue - currentQueue.nomorAntrian)).padStart(2, '0')"
+            ></span>
+          </div>
+        </section>
+
+        <!-- Queue Details -->
+        <section
+          class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 mt-6 border-2 border-base-content/10"
+        >
+          <h3 class="font-semibold font-serif text-lg mb-4 text-base-content">
+            Detail Booking
+          </h3>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Layanan:</span>
+              <span
+                class="font-semibold"
+                x-text="currentQueue.serviceName"
+              ></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Kapster:</span>
+              <span
+                class="font-semibold"
+                x-text="currentQueue.barberName"
+              ></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Jam:</span>
+              <span
+                class="font-semibold"
+                x-text="currentQueue.jamBooking"
+              ></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Status:</span>
+              <span
+                class="font-semibold px-3 py-1 rounded-full text-sm"
+                :class="statusClass(currentQueue.statusBooking)"
+                x-text="statusLabel(currentQueue.statusBooking)"
+              ></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Actions -->
+        <section class="mt-6 space-y-2">
+          <button class="w-full btn btn-primary" @click="navigateBooking()">
+            ➕ Buat Booking Baru
+          </button>
+          <button
+            class="w-full btn btn-outline"
+            @click="cancelQueue()"
+            :disabled="currentQueue.statusBooking === 'selesai'"
+          >
+            Batalkan Antrian Ini
+          </button>
+        </section>
+      </div>
+    </template>
+
+    <!-- All Queue List -->
+    <template x-if="queue.length > 0">
+      <section
+        class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10"
+      >
+        <h3 class="text-xl font-semibold font-serif text-base-content mb-4">
+          Daftar Semua Antrian
+        </h3>
+        <div class="space-y-2">
+          <template x-for="(item, idx) in queue" :key="item.bookingId">
+            <div
+              @click="selectedQueueIndex = idx"
+              class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors"
+              :class="selectedQueueIndex === idx ? 'bg-primary/10 border border-primary/30' : 'bg-base-300/50 hover:bg-base-300'"
+            >
+              <div class="flex items-center gap-3 flex-1">
+                <span class="text-lg font-bold font-serif text-primary"
+                  >#<span x-text="item.nomorAntrian"></span
+                ></span>
+                <div>
+                  <p
+                    class="text-sm font-semibold"
+                    x-text="item.serviceName"
+                  ></p>
+                  <p
+                    class="text-xs text-base-content/70"
+                    x-text="item.jamBooking"
+                  ></p>
+                </div>
+              </div>
+              <span
+                class="text-xs font-semibold px-2 py-1 rounded-full"
+                :class="statusClass(item.statusBooking)"
+                x-text="statusLabel(item.statusBooking)"
+              ></span>
+            </div>
+          </template>
+        </div>
+      </section>
+    </template>
+
+    <!-- No Queue State -->
+    <template x-if="queue.length === 0 && !loading">
+      <section
+        class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 lg:p-12 flex flex-col items-center justify-center text-center border-2 border-base-content/10"
+      >
+        ⌛
+        <h2 class="text-xl font-serif font-semibold text-base-content mb-2">
+          Tidak Ada Antrian
+        </h2>
+        <p class="text-sm font-sans text-base-content/70 mb-6">
+          Belum ada booking untuk hari ini
+        </p>
+        <a href="/booking" class="btn btn-primary">Booking Sekarang</a>
+      </section>
+    </template>
+
+    <!-- Loading State -->
+    <template x-if="loading">
+      <div class="flex justify-center py-12">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    </template>
+
+    <!-- Messages -->
+    <template x-if="message">
+      <div class="toast toast-top toast-end z-50">
+        <div
+          class="alert"
+          :class="messageType === 'error' ? 'alert-error' : 'alert-success'"
+          x-text="message"
+          @click="message = null"
+        ></div>
+      </div>
+    </template>
+  </main>
+
+  <script>
+    function statusApp() {
+      return {
+        currentPage: "status",
+        theme: localStorage.getItem("barbersync-theme") || "coffee",
+        queue: [],
+        user: null,
+        selectedQueueIndex: 0,
+        loading: false,
+        message: "",
+        messageType: "success",
+
+        get isLoggedIn() {
+          return !!this.user;
+        },
+
+        get currentQueue() {
+          return this.queue[this.selectedQueueIndex] || null;
+        },
+
+        setTheme(value) {
+          this.theme = value;
+          document.documentElement.setAttribute("data-theme", value);
+          localStorage.setItem("barbersync-theme", value);
+        },
+
+        statusClass(status) {
+          switch (status) {
+            case "pending":
+              return "bg-warning/20 text-warning border border-warning/30";
+            case "dalam_proses":
+              return "bg-primary/20 text-primary border border-primary/30";
+            case "selesai":
+              return "bg-success/20 text-success border border-success/30";
+            case "dibatalkan":
+              return "bg-error/20 text-error border border-error/30";
+            default:
+              return "bg-base-300 text-base-content/70";
+          }
+        },
+
+        statusLabel(status) {
+          switch (status) {
+            case "pending":
+              return "Menunggu";
+            case "dalam_proses":
+              return "Sedang Dikerjakan";
+            case "selesai":
+              return "Selesai";
+            case "dibatalkan":
+              return "Dibatalkan";
+            default:
+              return status;
+          }
+        },
+
+        navigateBooking() {
+          window.location.href = "/booking";
+        },
+
+        cancelQueue() {
+          if (confirm("Yakin ingin membatalkan antrian ini?")) {
+            if (this.currentQueue) {
+              this.currentQueue.statusBooking = "dibatalkan";
+              this.message = "Antrian berhasil dibatalkan";
+              setTimeout(() => {
+                window.BarberSyncStore.removeCurrentUserQueue(this.user);
+                this.queue = [];
+              }, 1500);
+            }
+          }
+        },
+
+        normalizeQueueData(stored) {
+          if (!stored) return [];
+
+          const parsed = JSON.parse(stored);
+          const queueItem = Array.isArray(parsed) ? parsed[0] : parsed;
+
+          if (!queueItem) return [];
+
+          return [
+            {
+              bookingId: queueItem.bookingId || "BK001",
+              nomorAntrian: queueItem.nomorAntrian || 1,
+              currentNumber:
+                queueItem.currentNumber || queueItem.nomorAntrian || 1,
+              totalQueue: queueItem.totalQueue || queueItem.nomorAntrian || 1,
+              serviceName: queueItem.serviceName || "Potong Rambut",
+              barberName: queueItem.barberName || "Ahmad Syaiful",
+              jamBooking: queueItem.jamBooking || queueItem.time || "14:30",
+              statusBooking:
+                queueItem.statusBooking || queueItem.status || "pending",
+              estimasiWaktu: queueItem.estimasiWaktu || "20-30 menit",
+              progress: queueItem.progress || 100,
+            },
+          ];
+        },
+
+        init() {
+          this.setTheme(this.theme);
+
+          try {
+            const storedUser = window.BarberSyncStore.getCurrentUser();
+            if (storedUser && storedUser.email) {
+              this.user = storedUser;
+            }
+          } catch (e) {}
+
+          try {
+            this.queue = window.BarberSyncStore.getCurrentUserQueue(this.user);
+            if (this.queue.length === 0 && this.user) {
+              this.queue = [];
+            }
+          } catch (e) {}
+
+          this.unsubStore = window.BarberSyncStore.subscribe((key) => {
+            if (!this.user) return;
+            if (
+              !key ||
+              key === window.BarberSyncStore.getQueueKey(this.user) ||
+              key === "barbersync-queue-index" ||
+              key === "barbersync-user"
+            ) {
+              this.user = window.BarberSyncStore.getCurrentUser();
+              this.queue = window.BarberSyncStore.getCurrentUserQueue(
+                this.user,
+              );
+              this.selectedQueueIndex = Math.min(
+                this.selectedQueueIndex,
+                Math.max(0, this.queue.length - 1),
+              );
+            }
+          });
+        },
+      };
+    }
+  </script>
+</div>

@@ -1,0 +1,538 @@
+<div
+  class="flex-1 min-w-0 max-h-screen overflow-scroll"
+  x-data="profileApp()"
+  x-init="init()"
+>
+  <main class="flex-grow w-full max-w-5xl mx-auto px-5 py-6 space-y-6 pb-32">
+    <template x-if="!isLoggedIn">
+      <section
+        class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-8 border-2 border-base-content/10 text-center"
+      >
+        <div class="text-4xl mb-3">🔒</div>
+        <h2 class="font-serif text-2xl font-semibold text-base-content">
+          Belum Login
+        </h2>
+        <p class="text-sm text-base-content/70 mt-2">
+          Silakan masuk terlebih dahulu untuk melihat informasi profil Anda.
+        </p>
+        <a href="/login" class="btn btn-primary mt-5">Masuk ke Akun</a>
+      </section>
+    </template>
+
+    <div x-show="isLoggedIn" class="space-y-6" x-cloak>
+      <!-- Profile Header -->
+      <section
+        class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 text-center"
+      >
+        <div
+          class="w-20 h-20 mx-auto rounded-full bg-primary flex items-center justify-center text-3xl font-bold text-primary-content mb-4"
+        >
+          <span x-text="userInitial"></span>
+        </div>
+        <h2
+          class="font-serif text-2xl font-semibold text-base-content"
+          x-text="user.nama || 'Pengguna'"
+        ></h2>
+        <p
+          class="text-base-content/70 text-sm mt-1"
+          x-text="user.email || 'email@example.com'"
+        ></p>
+        <p
+          class="text-base-content/70 text-sm"
+          x-text="user.phone || 'Nomor telepon tidak terdaftar'"
+        ></p>
+      </section>
+
+      <!-- Dashboard Entry -->
+      <section>
+        <a
+          :href="dashboardRoute"
+          class="bg-primary/10 border border-primary/30 rounded-2xl p-6 flex items-center justify-between gap-4 hover:border-primary transition-colors"
+        >
+          <div>
+            <p class="text-sm font-semibold text-primary">Akses Cepat</p>
+            <h3
+              class="font-serif text-xl font-semibold text-base-content mt-1"
+              x-text="dashboardLabel"
+            ></h3>
+            <p class="text-xs text-base-content/70 mt-1">
+              Masuk ke area yang sesuai dengan akun Anda.
+            </p>
+          </div>
+          <div class="text-3xl">↗️</div>
+        </a>
+      </section>
+
+      <!-- Account Settings -->
+      <section class="space-y-4">
+        <h3 class="font-serif text-xl font-semibold text-base-content">
+          Pengaturan Akun
+        </h3>
+
+        <div
+          class="space-y-3 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3 lg:space-y-0"
+        >
+          <button
+            type="button"
+            @click="openProfileModal()"
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 flex items-center justify-between hover:border-primary transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              ✏️
+              <div>
+                <p class="font-semibold text-base-content">Edit Profil</p>
+                <p class="text-xs text-base-content/70">
+                  Ubah informasi pribadi Anda
+                </p>
+              </div>
+            </div>
+            ->
+          </button>
+
+          <button
+            type="button"
+            @click="openPasswordModal()"
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 flex items-center justify-between hover:border-primary transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              🔒
+              <div>
+                <p class="font-semibold text-base-content">Ubah Kata Sandi</p>
+                <p class="text-xs text-base-content/70">
+                  Perbarui kata sandi akun Anda
+                </p>
+              </div>
+            </div>
+            ->
+          </button>
+
+          <a
+            href="#"
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 flex items-center justify-between hover:border-primary transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              🔔
+              <div>
+                <p class="font-semibold text-base-content">Notifikasi</p>
+                <p class="text-xs text-base-content/70">
+                  Atur preferensi notifikasi
+                </p>
+              </div>
+            </div>
+            ->
+          </a>
+        </div>
+      </section>
+
+      <!-- Preferences -->
+      <section class="space-y-4">
+        <h3 class="font-serif text-xl font-semibold text-base-content">
+          Preferensi
+        </h3>
+
+        <div
+          class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <label class="font-semibold">Tema</label>
+            <select
+              x-model="theme"
+              @change="setTheme(theme)"
+              class="select select-sm select-bordered bg-base-100 w-32"
+            >
+              <option value="coffee">Coffee</option>
+              <option value="pastel">Pastel</option>
+              <option value="dark">Dark</option>
+              <option value="business">Business</option>
+              <option value="cupcake">Cupcake</option>
+            </select>
+          </div>
+        </div>
+
+        <div
+          class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10"
+        >
+          <div class="flex items-center justify-between">
+            <label class="font-semibold">Notifikasi Push</label>
+            <input
+              type="checkbox"
+              class="toggle toggle-primary"
+              x-model="pushNotifications"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Support -->
+      <section class="space-y-4">
+        <h3 class="font-serif text-xl font-semibold text-base-content">
+          Bantuan & Dukungan
+        </h3>
+
+        <div
+          class="space-y-3 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3 lg:space-y-0"
+        >
+          <a
+            href="#"
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 flex items-center justify-between hover:border-primary transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              ❓
+              <div>
+                <p class="font-semibold text-base-content">Pusat Bantuan</p>
+                <p class="text-xs text-base-content/70">
+                  FAQ dan panduan penggunaan
+                </p>
+              </div>
+            </div>
+            ➡️
+          </a>
+
+          <a
+            href="#"
+            class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-6 border-2 border-base-content/10 flex items-center justify-between hover:border-primary transition-colors"
+          >
+            <div class="flex items-center gap-3">
+              📧
+              <div>
+                <p class="font-semibold text-base-content">Hubungi Kami</p>
+                <p class="text-xs text-base-content/70">
+                  support@barbersync.com
+                </p>
+              </div>
+            </div>
+            ➡️
+          </a>
+        </div>
+      </section>
+
+      <!-- Logout Button -->
+      <button @click="logout()" class="btn btn-outline btn-error w-full">
+        🚪 Keluar dari Akun
+      </button>
+
+      <!-- Edit Profile Modal -->
+      <template x-if="showProfileModal">
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+        >
+          <div
+            class="w-full max-w-lg rounded-2xl border-2 border-base-content/10 bg-base-100 p-6 shadow-2xl"
+          >
+            <div class="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p
+                  class="text-xs uppercase tracking-[0.35em] text-primary font-semibold"
+                >
+                  Profil
+                </p>
+                <h3
+                  class="font-serif text-2xl font-semibold text-base-content mt-1"
+                >
+                  Edit Profil
+                </h3>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                @click="closeModals()"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form class="space-y-4" @submit.prevent="saveProfile()">
+              <div>
+                <label class="label"
+                  ><span class="label-text font-semibold"
+                    >Nama Lengkap</span
+                  ></label
+                >
+                <input
+                  x-model="profileForm.name"
+                  type="text"
+                  class="input input-bordered w-full bg-base-100"
+                  required
+                />
+              </div>
+              <div>
+                <label class="label"
+                  ><span class="label-text font-semibold">Email</span></label
+                >
+                <input
+                  x-model="profileForm.email"
+                  type="email"
+                  class="input input-bordered w-full bg-base-100"
+                  required
+                />
+              </div>
+              <div>
+                <label class="label"
+                  ><span class="label-text font-semibold"
+                    >Nomor Telepon</span
+                  ></label
+                >
+                <input
+                  x-model="profileForm.phone"
+                  type="text"
+                  class="input input-bordered w-full bg-base-100"
+                />
+              </div>
+
+              <div class="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  @click="closeModals()"
+                >
+                  Batal
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </template>
+
+      <!-- Change Password Modal -->
+      <template x-if="showPasswordModal">
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+        >
+          <div
+            class="w-full max-w-lg rounded-2xl border-2 border-base-content/10 bg-base-100 p-6 shadow-2xl"
+          >
+            <div class="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <p
+                  class="text-xs uppercase tracking-[0.35em] text-primary font-semibold"
+                >
+                  Keamanan
+                </p>
+                <h3
+                  class="font-serif text-2xl font-semibold text-base-content mt-1"
+                >
+                  Ubah Kata Sandi
+                </h3>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                @click="closeModals()"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form class="space-y-4" @submit.prevent="savePassword()">
+              <div>
+                <label class="label"
+                  ><span class="label-text font-semibold"
+                    >Kata Sandi Saat Ini</span
+                  ></label
+                >
+                <input
+                  x-model="passwordForm.currentPassword"
+                  type="password"
+                  class="input input-bordered w-full bg-base-100"
+                  required
+                />
+              </div>
+              <div>
+                <label class="label"
+                  ><span class="label-text font-semibold"
+                    >Kata Sandi Baru</span
+                  ></label
+                >
+                <input
+                  x-model="passwordForm.newPassword"
+                  type="password"
+                  class="input input-bordered w-full bg-base-100"
+                  required
+                />
+              </div>
+              <div>
+                <label class="label"
+                  ><span class="label-text font-semibold"
+                    >Konfirmasi Kata Sandi Baru</span
+                  ></label
+                >
+                <input
+                  x-model="passwordForm.confirmPassword"
+                  type="password"
+                  class="input input-bordered w-full bg-base-100"
+                  required
+                />
+              </div>
+
+              <div class="flex gap-3 justify-end pt-2">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  @click="closeModals()"
+                >
+                  Batal
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Simpan Kata Sandi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </template>
+    </div>
+  </main>
+
+  <script>
+    function profileApp() {
+      return {
+        currentPage: "about",
+        theme: localStorage.getItem("barbersync-theme") || "business",
+        user: {},
+        pushNotifications: true,
+        showProfileModal: false,
+        showPasswordModal: false,
+        profileForm: {
+          name: "",
+          email: "",
+          phone: "",
+        },
+        passwordForm: {
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        },
+        message: "",
+        messageType: "success",
+
+        get isLoggedIn() {
+          return !!this.user.email;
+        },
+
+        get dashboardRoute() {
+          return this.user.role === "admin" ? "/admin" : "/dashboard";
+        },
+
+        get dashboardLabel() {
+          return this.user.role === "admin"
+            ? "Masuk Admin Panel"
+            : "Masuk Dashboard User";
+        },
+
+        get userInitial() {
+          if (this.user.nama) {
+            return this.user.nama.charAt(0).toUpperCase();
+          }
+          return "U";
+        },
+
+        setTheme(value) {
+          this.theme = value;
+          document.documentElement.setAttribute("data-theme", value);
+          localStorage.setItem("barbersync-theme", value);
+        },
+
+        logout() {
+          if (confirm("Yakin ingin keluar?")) {
+            window.BarberSyncStore.clearCurrentUser();
+            window.location.href = "/login";
+          }
+        },
+
+        openProfileModal() {
+          this.profileForm = {
+            name: this.user.nama || this.user.name || "",
+            email: this.user.email || "",
+            phone: this.user.phone || "",
+          };
+          this.showProfileModal = true;
+        },
+
+        openPasswordModal() {
+          this.passwordForm = {
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          };
+          this.showPasswordModal = true;
+        },
+
+        closeModals() {
+          this.showProfileModal = false;
+          this.showPasswordModal = false;
+        },
+
+        saveProfile() {
+          const result = window.BarberSyncStore.updateProfile(this.user.email, {
+            name: this.profileForm.name,
+            nama: this.profileForm.name,
+            email: this.profileForm.email,
+            phone: this.profileForm.phone,
+          });
+
+          if (!result.ok) {
+            this.message = result.message;
+            this.messageType = "error";
+            return;
+          }
+
+          this.user = result.user;
+          this.message = "Profil berhasil diperbarui";
+          this.messageType = "success";
+          this.showProfileModal = false;
+        },
+
+        savePassword() {
+          if (
+            this.passwordForm.newPassword !== this.passwordForm.confirmPassword
+          ) {
+            this.message = "Konfirmasi kata sandi tidak cocok";
+            this.messageType = "error";
+            return;
+          }
+
+          const result = window.BarberSyncStore.changePassword(
+            this.user.email,
+            this.passwordForm.currentPassword,
+            this.passwordForm.newPassword,
+          );
+
+          if (!result.ok) {
+            this.message = result.message;
+            this.messageType = "error";
+            return;
+          }
+
+          this.message = "Kata sandi berhasil diperbarui";
+          this.messageType = "success";
+          this.showPasswordModal = false;
+        },
+
+        init() {
+          this.setTheme(this.theme);
+
+          try {
+            const stored = window.BarberSyncStore.getCurrentUser();
+            if (stored && stored.email) {
+              this.user = stored;
+            }
+          } catch (e) {}
+
+          this.unsubStore = window.BarberSyncStore.subscribe((key) => {
+            if (
+              !key ||
+              key === "barbersync-user" ||
+              key === "barbersync-users"
+            ) {
+              const stored = window.BarberSyncStore.getCurrentUser();
+              this.user = stored && stored.email ? stored : {};
+            }
+          });
+        },
+      };
+    }
+  </script>
+</div>

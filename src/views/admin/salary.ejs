@@ -1,0 +1,59 @@
+<section class="space-y-6">
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">Payroll</p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Gaji Barber</h2>
+    <p class="text-base-content/70 max-w-3xl">Lihat ringkasan komisi, bonus, potongan, dan payout bersih untuk setiap barber.</p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Total Payout</p>
+      <h3 class="text-3xl font-bold text-primary mt-2">Rp <%= Number(salaries.reduce((total, item) => total + item.payout, 0)).toLocaleString('id-ID') %></h3>
+    </div>
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Barber Aktif</p>
+      <h3 class="text-3xl font-bold text-success mt-2"><%= salaries.length %></h3>
+    </div>
+    <div class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10">
+      <p class="text-sm text-base-content/70">Tunggu Verifikasi</p>
+      <h3 class="text-3xl font-bold text-warning mt-2"><%= salaries.filter((item) => item.statusLabel === 'Siap Dibayar').length %></h3>
+    </div>
+  </section>
+
+  <section class="bg-base-100/20 backdrop-blur-sm rounded-2xl border border-base-content/10 overflow-hidden">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-base-content/10">
+      <h3 class="text-xl font-semibold">Rekap Per Barber</h3>
+      <span class="text-sm text-base-content/60">Periode bulan berjalan</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr class="text-base-content/60">
+            <th>Barber</th>
+            <th>Role</th>
+            <th>Order Selesai</th>
+            <th>Gaji Pokok</th>
+            <th>Bonus</th>
+            <th>Potongan</th>
+            <th>Payout Bersih</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% salaries.forEach((item) => { %>
+            <tr>
+              <td class="font-semibold"><%= item.name %></td>
+              <td><%= item.role %></td>
+              <td><%= item.completedOrders %></td>
+              <td>Rp <%= Number(item.baseSalary).toLocaleString('id-ID') %></td>
+              <td>Rp <%= Number(item.bonus).toLocaleString('id-ID') %></td>
+              <td>Rp <%= Number(item.deduction).toLocaleString('id-ID') %></td>
+              <td class="font-semibold text-primary">Rp <%= Number(item.payout).toLocaleString('id-ID') %></td>
+              <td><span class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold <%= item.statusClass %>"><%= item.statusLabel %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

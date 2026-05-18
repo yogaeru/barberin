@@ -1,0 +1,242 @@
+<div class="lg:flex lg:min-h-screen" x-data="registerApp()" x-init="init()">
+  <div class="flex-1 min-w-0 flex flex-col gap-6 px-4 py-4">
+    <%- include('partials/header', { showBack: true, pageTitle: 'Daftar', showLoginNav: false }) %>
+    <div class="flex-1 min-w-0 flex items-center justify-center py-8">
+    <div class="w-full max-w-md">
+      <!-- Register Card -->
+      <div
+        class="bg-base-100/30 backdrop-blur-sm rounded-2xl p-8 border-2 border-base-content/10 space-y-6"
+      >
+        <div class="text-center">
+          <h1 class="font-['Noto_Serif'] text-3xl font-bold text-primary mb-2">
+            BarberSync
+          </h1>
+          <p class="text-base-content/70">Buat akun baru</p>
+        </div>
+
+        <!-- Form -->
+        <form @submit.prevent="handleRegister" class="space-y-4">
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Username</span>
+            </label>
+            <input
+              x-model="username"
+              type="text"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="<%= demoUsers[1].username %>"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Nama Lengkap</span>
+            </label>
+            <input
+              x-model="fullName"
+              type="text"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="Ahmad Syaiful"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Email</span>
+            </label>
+            <input
+              x-model="email"
+              type="email"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="contoh@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Nomor Telepon</span>
+            </label>
+            <input
+              x-model="phone"
+              type="tel"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="081234567890"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold">Kata Sandi</span>
+            </label>
+            <input
+              x-model="password"
+              type="password"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="label">
+              <span class="label-text font-semibold"
+                >Konfirmasi Kata Sandi</span
+              >
+            </label>
+            <input
+              x-model="confirmPassword"
+              type="password"
+              class="input input-bordered w-full bg-base-100"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-2">
+              <input
+                type="checkbox"
+                x-model="agreeTerms"
+                class="checkbox checkbox-primary"
+              />
+              <span class="label-text text-sm"
+                >Saya setuju dengan
+                <a href="#" class="link link-primary"
+                  >syarat dan ketentuan</a
+                ></span
+              >
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary w-full"
+            :disabled="!agreeTerms"
+          >
+            <span x-show="!loading">Daftar</span>
+            <span
+              x-show="loading"
+              class="loading loading-spinner loading-sm"
+            ></span>
+          </button>
+        </form>
+
+        <!-- Login Link -->
+        <p class="text-center text-sm text-base-content/70">
+          Sudah punya akun?
+          <a href="/login" class="link link-primary font-semibold"
+            >Masuk di sini</a
+          >
+        </p>
+      </div>
+
+      <!-- Messages -->
+      <template x-if="message">
+        <div
+          class="alert mt-4"
+          :class="messageType === 'error' ? 'alert-error' : 'alert-success'"
+        >
+          <p x-text="message"></p>
+        </div>
+      </template>
+    </div>
+  </div>
+  <%- include('partials/bottomNavbar') %>
+</div>
+
+<script>
+  function registerApp() {
+    return {
+      currentPage: "register",
+      theme: localStorage.getItem("barbersync-theme") || "business",
+      username: "",
+      fullName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      agreeTerms: false,
+      loading: false,
+      message: "",
+      messageType: "success",
+
+      setTheme(value) {
+        this.theme = value;
+        document.documentElement.setAttribute("data-theme", value);
+        localStorage.setItem("barbersync-theme", value);
+      },
+
+      handleRegister() {
+        if (this.password !== this.confirmPassword) {
+          this.message = "Kata sandi tidak cocok";
+          this.messageType = "error";
+          return;
+        }
+
+        this.loading = true;
+
+        if (
+          this.username &&
+          this.fullName &&
+          this.email &&
+          this.phone &&
+          this.password &&
+          this.agreeTerms
+        ) {
+          fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: this.username,
+              name: this.fullName,
+              email: this.email,
+              phone: this.phone,
+              password: this.password,
+            }),
+          })
+            .then(async (response) => {
+              const payload = await response.json();
+              if (!response.ok) {
+                throw new Error(payload.message || "Pendaftaran gagal");
+              }
+
+              return payload;
+            })
+            .then((result) => {
+              localStorage.setItem("barbersync-token", result.token);
+              localStorage.setItem("barbersync-user", JSON.stringify(result.user));
+              if (window.BarberSyncStore?.setCurrentUser) {
+                window.BarberSyncStore.setCurrentUser(result.user);
+              }
+
+              this.message = "Pendaftaran berhasil! Mengalihkan...";
+              this.messageType = "success";
+
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 1000);
+            })
+            .catch((error) => {
+              this.message = error.message;
+              this.messageType = "error";
+            })
+            .finally(() => {
+              this.loading = false;
+            });
+        } else {
+          this.message = "Semua field harus diisi";
+          this.messageType = "error";
+          this.loading = false;
+        }
+      },
+
+      init() {
+        this.setTheme(this.theme);
+      },
+    };
+  }
+</script>

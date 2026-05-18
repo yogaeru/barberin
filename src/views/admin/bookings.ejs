@@ -1,0 +1,139 @@
+<section class="space-y-6" x-data="adminBookingsApp()" x-init="init()" x-cloak>
+  <div class="space-y-2">
+    <p class="text-xs uppercase tracking-[0.35em] text-primary font-semibold">
+      Reservasi
+    </p>
+    <h2 class="text-3xl lg:text-4xl font-bold">Daftar Booking</h2>
+    <p class="text-base-content/70 max-w-3xl">
+      Kelola booking pelanggan, catatan khusus, dan status konfirmasi dari satu
+      tampilan.
+    </p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Booking Aktif</p>
+      <h3
+        class="text-3xl font-bold text-primary mt-2"
+        x-text="bookings.filter((booking) => booking.statusBooking !== 'selesai' && booking.statusBooking !== 'dibatalkan').length"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Booking Selesai</p>
+      <h3
+        class="text-3xl font-bold text-success mt-2"
+        x-text="bookings.filter((booking) => booking.statusBooking === 'selesai').length"
+      ></h3>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Booking Batal</p>
+      <h3
+        class="text-3xl font-bold text-error mt-2"
+        x-text="bookings.filter((booking) => booking.statusBooking === 'dibatalkan').length"
+      ></h3>
+    </div>
+  </section>
+
+  <section
+    class="bg-base-100/20 backdrop-blur-sm rounded-2xl border border-base-content/10 overflow-hidden"
+  >
+    <div
+      class="flex items-center justify-between px-5 py-4 border-b border-base-content/10"
+    >
+      <h3 class="text-xl font-semibold">Booking Tersimpan</h3>
+      <a href="/admin/history" class="text-sm text-primary font-semibold"
+        >Lihat riwayat</a
+      >
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr class="text-base-content/60">
+            <th>Booking</th>
+            <th>Pelanggan</th>
+            <th>Layanan</th>
+            <th>Kapster</th>
+            <th>Jadwal</th>
+            <th>Catatan</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="booking in bookings" :key="booking.bookingId">
+            <tr>
+              <td class="font-semibold" x-text="booking.bookingId"></td>
+              <td x-text="booking.userName || booking.userEmail"></td>
+              <td x-text="booking.serviceName"></td>
+              <td x-text="booking.barberName"></td>
+              <td x-text="booking.date + ' • ' + booking.time"></td>
+              <td
+                class="max-w-xs text-base-content/70"
+                x-text="booking.catatan || '-' "
+              ></td>
+              <td>
+                <span
+                  class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold"
+                  :class="statusClass(booking.statusBooking)"
+                  x-text="statusLabel(booking.statusBooking)"
+                ></span>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<script>
+  function adminBookingsApp() {
+    return {
+      currentPage: "admin-bookings",
+      bookings: <%- JSON.stringify(bookings || []) %>,
+
+      statusClass(status) {
+        switch (status) {
+          case "pending":
+            return "bg-warning/20 text-warning border-warning/30";
+          case "dalam_proses":
+            return "bg-primary/20 text-primary border-primary/30";
+          case "selesai":
+            return "bg-success/20 text-success border-success/30";
+          case "dibatalkan":
+            return "bg-error/20 text-error border-error/30";
+          default:
+            return "bg-base-300 text-base-content/70";
+        }
+      },
+
+      statusLabel(status) {
+        switch (status) {
+          case "pending":
+            return "Menunggu";
+          case "dalam_proses":
+            return "Sedang Dikerjakan";
+          case "selesai":
+            return "Selesai";
+          case "dibatalkan":
+            return "Dibatalkan";
+          default:
+            return status;
+        }
+      },
+
+      refresh() {
+        this.bookings = <%- JSON.stringify(bookings || []) %>;
+      },
+
+      init() {
+        this.refresh();
+      },
+    };
+  }
+</script>

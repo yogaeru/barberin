@@ -1,0 +1,211 @@
+<section class="space-y-6" x-data="adminDashboardApp()" x-init="init()" x-cloak>
+  <div class="space-y-2">
+    <span
+      class="inline-flex px-3 py-1 rounded-full bg-base-100/20 backdrop-blur-sm border border-base-content/10 text-xs font-semibold uppercase tracking-[0.3em] text-primary"
+      >Panel Operasional</span
+    >
+    <h2 class="text-3xl lg:text-4xl font-bold text-base-content">
+      Ringkasan Admin BarberSync
+    </h2>
+    <p class="text-base-content/70 max-w-3xl">
+      Pantau status antrian, booking, riwayat transaksi, dan data pengguna dari
+      satu dashboard yang selalu mengikuti data frontend.
+    </p>
+  </div>
+
+  <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Antrian Aktif</p>
+      <h3
+        class="text-3xl font-bold text-primary mt-2"
+        x-text="queue.length"
+      ></h3>
+      <p class="text-sm text-base-content/60 mt-1">Sedang menunggu layanan</p>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Booking Hari Ini</p>
+      <h3
+        class="text-3xl font-bold text-base-content mt-2"
+        x-text="bookings.length"
+      ></h3>
+      <p class="text-sm text-base-content/60 mt-1">Terkonfirmasi dan aktif</p>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Order Lunas</p>
+      <h3
+        class="text-3xl font-bold text-success mt-2"
+        x-text="orderPaidCount"
+      ></h3>
+      <p class="text-sm text-base-content/60 mt-1">Pembayaran berhasil</p>
+    </div>
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <p class="text-sm text-base-content/70">Pengguna Terdata</p>
+      <h3 class="text-3xl font-bold text-info mt-2" x-text="users.length"></h3>
+      <p class="text-sm text-base-content/60 mt-1">Pelanggan dan staf</p>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div
+      class="xl:col-span-2 bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold">Antrian Terbaru</h3>
+        <a href="/admin/queue" class="text-sm text-primary font-semibold"
+          >Lihat semua</a
+        >
+      </div>
+      <div class="space-y-3">
+        <template x-for="item in queue.slice(0, 3)" :key="item.bookingId">
+          <div
+            class="flex items-center justify-between gap-4 rounded-2xl bg-base-100/10 border border-base-content/10 p-4"
+          >
+            <div>
+              <p
+                class="font-semibold text-base-content"
+                x-text="item.userName || item.userEmail"
+              ></p>
+              <p
+                class="text-sm text-base-content/70"
+                x-text="item.serviceName + ' • ' + item.barberName"
+              ></p>
+            </div>
+            <div class="text-right">
+              <p
+                class="text-sm text-base-content/60"
+                x-text="'#' + item.nomorAntrian + ' • ' + item.jamBooking"
+              ></p>
+              <span
+                class="inline-flex px-3 py-1 rounded-full border text-xs font-semibold"
+                :class="statusClass(item.statusBooking)"
+                x-text="statusLabel(item.statusBooking)"
+              ></span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div
+      class="bg-base-100/20 backdrop-blur-sm rounded-2xl p-5 border border-base-content/10 space-y-4"
+    >
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-semibold">Menu Cepat</h3>
+        <span class="text-xs uppercase tracking-[0.3em] text-base-content/50"
+          >Aksi</span
+        >
+      </div>
+      <div class="grid grid-cols-1 gap-3">
+        <a
+          href="/admin/queue"
+          class="rounded-2xl border border-base-content/10 bg-base-100/10 p-4 hover:border-primary/30 transition-colors"
+        >
+          <p class="font-semibold">Kelola Antrian</p>
+          <p class="text-sm text-base-content/70">
+            Panggil, tahan, atau batalkan urutan layanan
+          </p>
+        </a>
+        <a
+          href="/admin/bookings"
+          class="rounded-2xl border border-base-content/10 bg-base-100/10 p-4 hover:border-primary/30 transition-colors"
+        >
+          <p class="font-semibold">Cek Booking</p>
+          <p class="text-sm text-base-content/70">
+            Lihat booking aktif dan status konfirmasi
+          </p>
+        </a>
+        <a
+          href="/admin/users"
+          class="rounded-2xl border border-base-content/10 bg-base-100/10 p-4 hover:border-primary/30 transition-colors"
+        >
+          <p class="font-semibold">Data Pengguna</p>
+          <p class="text-sm text-base-content/70">
+            Pantau akun yang tersimpan di browser
+          </p>
+        </a>
+      </div>
+    </div>
+  </section>
+</section>
+
+<script>
+  function adminDashboardApp() {
+    return {
+      currentPage: "admin-dashboard",
+      queue: <%- JSON.stringify(queue || []) %>,
+      bookings: <%- JSON.stringify(bookings || []) %>,
+      users: <%- JSON.stringify(users || []) %>,
+      orders: <%- JSON.stringify(orders || []) %>,
+
+      get token() {
+        return localStorage.getItem("barbersync-token") || "";
+      },
+
+      headers() {
+        return this.token
+          ? { Authorization: `Bearer ${this.token}` }
+          : {};
+      },
+
+      get orderPaidCount() {
+        return this.orders.filter((order) => order.statusLabel === "Lunas").length;
+      },
+
+      statusClass(status) {
+        switch (status) {
+          case "pending":
+            return "bg-warning/20 text-warning border-warning/30";
+          case "dalam_proses":
+            return "bg-primary/20 text-primary border-primary/30";
+          case "selesai":
+            return "bg-success/20 text-success border-success/30";
+          case "dibatalkan":
+            return "bg-error/20 text-error border-error/30";
+          default:
+            return "bg-base-300 text-base-content/70";
+        }
+      },
+
+      statusLabel(status) {
+        switch (status) {
+          case "pending":
+            return "Menunggu";
+          case "dalam_proses":
+            return "Sedang Dikerjakan";
+          case "selesai":
+            return "Selesai";
+          case "dibatalkan":
+            return "Dibatalkan";
+          default:
+            return status;
+        }
+      },
+
+      refresh() {
+        fetch("/api/admin/dashboard", {
+          headers: this.headers(),
+        })
+          .then((response) => response.json())
+          .then((payload) => {
+            this.queue = payload.queue || [];
+            this.bookings = payload.bookings || [];
+            this.users = payload.users || [];
+            this.orders = payload.orders || [];
+          })
+          .catch(() => {});
+      },
+
+      init() {
+        this.refresh();
+      },
+    };
+  }
+</script>

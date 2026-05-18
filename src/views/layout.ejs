@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html data-theme="cupcake" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <!-- CDN DaisyUI -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <!-- CDN DaisyUI Themes -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+
+    <!-- CDN TailwindCSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- AlipineJS CDN -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <style>
+      /* LIGHT */
+      [data-theme="pastel"] body,
+      [data-theme="cupcake"] body,
+      [data-theme="corporate"] body {
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(96, 165, 250, 0.25),
+            transparent 35%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(168, 85, 247, 0.18),
+            transparent 35%
+          ),
+          linear-gradient(to bottom right, #f8fafc, #eef2ff, #dbeafe);
+
+        min-height: 100vh;
+      }
+
+      /* DARK */
+      [data-theme="dark"] body,
+      [data-theme="night"] body,
+      [data-theme="business"] body {
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(59, 130, 246, 0.18),
+            transparent 35%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(139, 92, 246, 0.16),
+            transparent 35%
+          ),
+          linear-gradient(to bottom right, #020617, #111827, #1e1b4b);
+
+        min-height: 100vh;
+      }
+
+      .btn {
+        border-radius: 12px;
+      }
+
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+      <%- include("./partials/storageHelpers") %>
+    <!-- <body class="min-h-screen bg-gradient-to-br from-slate-900 via-zinc-900 to-slate-800 p-4"> -->
+    <!-- <body> -->
+      <%
+        const authPages = ["login", "register", "forgot-password"];
+        const isAuthPage = authPages.includes(currentPage);
+      %>
+      <div class="flex p-0">
+        <% if (!isAuthPage) { %>
+          <%- include("./partials/sidebar") %>
+        <% } %>
+        <%- body %>
+      </div>
+      <% if (!isAuthPage) { %>
+        <%- include("./partials/bottomNavbar") %>
+      <% } %>
+  </body>
+</html>

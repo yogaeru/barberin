@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html data-theme="business" lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> - BarberSync</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <style>
+      body {
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(59, 130, 246, 0.18),
+            transparent 32%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(234, 179, 8, 0.16),
+            transparent 30%
+          ),
+          linear-gradient(to bottom right, #020617, #0f172a, #111827);
+      }
+
+      .btn {
+        border-radius: 12px;
+      }
+
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-base-content">
+    <%- include("../partials/storageHelpers") %>
+    <div class="min-h-screen lg:flex" x-data="{drawer:false}">
+      <aside class="hidden lg:flex w-80 shrink-0 p-4">
+        <div
+          class="w-full rounded-[2rem] bg-base-100/20 backdrop-blur-2xl border border-base-content/10 shadow-2xl p-4 flex flex-col"
+        >
+          <div class="px-2 pt-2 pb-6">
+            <p
+              class="text-xs uppercase tracking-[0.4em] text-primary font-semibold"
+            >
+              Admin Panel
+            </p>
+            <h1 class="text-3xl font-bold tracking-tight mt-2">
+              <span class="text-primary">Barber</span>Sync
+            </h1>
+            <p class="text-sm text-base-content/70 mt-2">
+              Kelola antrian, booking, order, dan penggajian dari satu tempat.
+            </p>
+          </div>
+
+          <nav class="space-y-2">
+            <a
+              href="/admin"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-dashboard' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >📊 <span>Ringkasan</span></a
+            >
+            <a
+              href="/admin/queue"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-queue' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >⏳ <span>Daftar Antrian</span></a
+            >
+            <a
+              href="/admin/orders"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-orders' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >🧾 <span>Order</span></a
+            >
+            <a
+              href="/admin/bookings"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-bookings' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >📅 <span>Booking</span></a
+            >
+            <a
+              href="/admin/kapster"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-kapster' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >💈 <span>Kapster</span></a
+            >
+            <a
+              href="/admin/schedules"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-schedules' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >🗓️ <span>Jadwal</span></a
+            >
+            <a
+              href="/admin/history"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-history' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >🕒 <span>Riwayat</span></a
+            >
+            <a
+              href="/admin/salary"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-salary' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >💰 <span>Gaji</span></a
+            >
+            <a
+              href="/admin/users"
+              class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 <%= currentPage === 'admin-users' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:text-base-content hover:bg-base-content/5' %>"
+              >👥 <span>Pengguna</span></a
+            >
+          </nav>
+
+          <div class="mt-auto pt-6 space-y-3">
+            <a href="/" class="btn btn-primary btn-block"
+              >← Kembali ke Aplikasi</a
+            >
+            <div
+              class="rounded-2xl bg-base-100/10 border border-base-content/10 p-4 text-sm text-base-content/70"
+            >
+              <p class="font-semibold text-base-content mb-1">Mode Demo</p>
+              <p>
+                Semua data di panel ini masih berupa mock data untuk kebutuhan
+                tampilan.
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="flex-1 min-w-0 flex flex-col">
+        <header class="lg:hidden sticky top-0 z-40 px-4 pt-4">
+          <div
+            class="rounded-3xl bg-base-100/25 backdrop-blur-2xl border border-base-content/10 px-4 py-3 flex items-center justify-between shadow-2xl"
+          >
+            <div class="flex items-center gap-3">
+              <button @click="drawer = true" class="btn btn-ghost btn-circle">
+                ☰
+              </button>
+              <div>
+                <p
+                  class="text-[11px] uppercase tracking-[0.35em] text-primary font-semibold"
+                >
+                  Admin Panel
+                </p>
+                <h1 class="text-lg font-bold text-base-content">
+                  <%= title %>
+                </h1>
+              </div>
+            </div>
+            <a href="/" class="btn btn-sm btn-primary">Keluar</a>
+          </div>
+
+          <!-- Mobile drawer -->
+          <div
+            x-show="drawer"
+            x-transition
+            class="fixed inset-0 z-50 lg:hidden"
+            x-cloak
+          >
+            <div
+              class="absolute inset-0 bg-black/50"
+              @click="drawer = false"
+            ></div>
+            <aside
+              class="absolute left-0 top-0 bottom-0 w-72 bg-base-100/95 backdrop-blur p-4"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-lg">Menu Admin</h2>
+                <button @click="drawer = false" class="btn btn-ghost">✕</button>
+              </div>
+              <nav class="space-y-2">
+                <a
+                  href="/admin"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-dashboard' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >📊 Ringkasan</a
+                >
+                <a
+                  href="/admin/queue"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-queue' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >⏳ Daftar Antrian</a
+                >
+                <a
+                  href="/admin/orders"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-orders' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >🧾 Order</a
+                >
+                <a
+                  href="/admin/bookings"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-bookings' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >📅 Booking</a
+                >
+                <a
+                  href="/admin/kapster"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-kapster' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >💈 Kapster</a
+                >
+                <a
+                  href="/admin/schedules"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-schedules' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >🗓️ Jadwal</a
+                >
+                <a
+                  href="/admin/history"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-history' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >🕒 Riwayat</a
+                >
+                <a
+                  href="/admin/salary"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-salary' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >💰 Gaji</a
+                >
+                <a
+                  href="/admin/users"
+                  class="block px-3 py-2 rounded <%= currentPage === 'admin-users' ? 'bg-primary/10 text-primary font-semibold' : 'text-base-content/70 hover:bg-base-content/5' %>"
+                  >👥 Pengguna</a
+                >
+                <div class="mt-4">
+                  <a href="/" class="btn btn-primary w-full"
+                    >← Kembali ke Aplikasi</a
+                  >
+                </div>
+              </nav>
+            </aside>
+          </div>
+        </header>
+
+        <main
+          class="flex-1 w-full max-w-[90rem] mx-auto px-4 sm:px-5 lg:px-8 py-6 lg:py-8 pb-10"
+        >
+          <%- body %>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
