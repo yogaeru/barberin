@@ -16,7 +16,7 @@
           </div>
           <div class="mt-4 flex items-center justify-between">
             <span class="text-sm font-semibold <%= b.availableToday ? 'text-success' : 'text-error' %>"><%= b.availableToday ? 'Aktif Hari Ini' : 'Non-aktif' %></span>
-            <a href="/admin/kapster/toggle/<%= b.id %>" class="btn btn-sm <%= b.availableToday ? 'btn-outline' : 'btn-primary' %>"><%= b.availableToday ? 'Non-aktifkan' : 'Aktifkan' %></a>
+            <a href="/admin/kapster/toggle/<%= b.barberId %>" class="btn btn-sm <%= b.availableToday ? 'btn-outline' : 'btn-primary' %>"><%= b.availableToday ? 'Non-aktifkan' : 'Aktifkan' %></a>
           </div>
         </div>
       <% }) %>

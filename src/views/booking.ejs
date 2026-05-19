@@ -408,6 +408,28 @@
           form.submit();
         },
 
+        async fetchFromServer() {
+          if (!this.user) return;
+          try {
+            const res = await fetch("/api/bookings/current-queue");
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.ok && data.queue) {
+              window.BarberSyncStore.upsertQueueEntry(data.queue, this.user);
+            } else if (data.ok && !data.queue) {
+              if (this.userBookings.length > 0) {
+                window.BarberSyncStore.removeCurrentUserQueue(this.user);
+              }
+            }
+          } catch (e) {}
+        },
+
+        startPolling() {
+          this._pollInterval = setInterval(() => {
+            this.fetchFromServer();
+          }, 10000);
+        },
+
         init() {
           this.setTheme(this.theme);
 
@@ -440,6 +462,10 @@
           try {
             this.userBookings = window.BarberSyncStore.getCurrentUserQueue(this.user);
           } catch (e) {}
+
+          this.fetchFromServer();
+
+          this.startPolling();
 
           this.unsubStore = window.BarberSyncStore.subscribe((key) => {
             if (!this.user) return;

@@ -296,6 +296,7 @@
 
         return {
           bookingId: queueItem.bookingId || `BK-${Date.now()}`,
+          rawBookingId: queueItem.rawBookingId || null,
           userEmail: ownerEmail,
           userName: ownerName,
           nomorAntrian: queueNumber,

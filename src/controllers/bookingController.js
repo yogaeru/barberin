@@ -1,10 +1,26 @@
 import {
   createUserBooking,
   listCurrentUserBookings,
+  getCurrentUserQueueStatus,
+  cancelUserBooking,
 } from "../services/bookingService.js";
 
 export const getCurrentUserBookings = (req, res) => {
   res.json({ ok: true, bookings: listCurrentUserBookings(req.auth.userId) });
+};
+
+export const getCurrentQueue = (req, res) => {
+  const queue = getCurrentUserQueueStatus(req.auth.userId);
+  res.json({ ok: true, queue });
+};
+
+export const cancelBooking = (req, res) => {
+  const bookingId = Number(req.params.bookingId);
+  const result = cancelUserBooking(req.auth.userId, bookingId);
+  if (!result.ok) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
 };
 
 export const createBooking = (req, res) => {

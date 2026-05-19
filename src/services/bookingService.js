@@ -263,6 +263,37 @@ export const listCurrentUserBookings = (userId) => getBookingsForUser(userId);
 
 export const createUserBooking = (payload) => createBooking(payload);
 
+export const getCurrentUserQueueStatus = (userId) => {
+  const activeBooking = getActiveBookingForUser(userId);
+  if (!activeBooking) return null;
+
+  const today = activeBooking.tanggalBooking;
+  const allRows = getBookingJoinedRows(
+    `WHERE bk.statusBooking IN ('menunggu', 'dikonfirmasi', 'dalam_proses') AND bk.tanggalBooking = ?`,
+    [today],
+  );
+  const totalQueue = allRows.length || 0;
+  const currentNumber =
+    allRows.find((r) => r.statusBooking === "dalam_proses")?.nomorAntrian ||
+    allRows[0]?.nomorAntrian ||
+    0;
+
+  const myRow = allRows.find((r) => r.bookingId === activeBooking.bookingId);
+  if (!myRow) return null;
+
+  return serializeBooking(myRow, { currentNumber, totalQueue });
+};
+
+export const cancelUserBooking = (userId, bookingId) => {
+  const booking = getBookingByRawId(Number(bookingId));
+  if (!booking) return { ok: false, message: "Booking tidak ditemukan" };
+  if (booking.userId !== userId) return { ok: false, message: "Bukan booking Anda" };
+  if (["selesai", "dibatalkan"].includes(booking.statusBooking)) {
+    return { ok: false, message: "Booking sudah selesai atau dibatalkan" };
+  }
+  return updateBookingStatus(Number(bookingId), "dibatalkan");
+};
+
 export const getAdminHistory = () =>
   getBookingJoinedRows(
     `WHERE bk.statusBooking IN ('selesai', 'dibatalkan')`,

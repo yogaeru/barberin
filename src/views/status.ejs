@@ -275,6 +275,8 @@
 
         statusClass(status) {
           switch (status) {
+            case "menunggu":
+            case "dikonfirmasi":
             case "pending":
               return "bg-warning/20 text-warning border border-warning/30";
             case "dalam_proses":
@@ -290,8 +292,11 @@
 
         statusLabel(status) {
           switch (status) {
+            case "menunggu":
             case "pending":
               return "Menunggu";
+            case "dikonfirmasi":
+              return "Dikonfirmasi";
             case "dalam_proses":
               return "Sedang Dikerjakan";
             case "selesai":
@@ -307,43 +312,52 @@
           window.location.href = "/booking";
         },
 
-        cancelQueue() {
-          if (confirm("Yakin ingin membatalkan antrian ini?")) {
-            if (this.currentQueue) {
-              this.currentQueue.statusBooking = "dibatalkan";
+        async fetchFromServer() {
+          if (!this.user) return;
+          try {
+            const res = await fetch("/api/bookings/current-queue");
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.ok && data.queue) {
+              window.BarberSyncStore.upsertQueueEntry(data.queue, this.user);
+            } else if (data.ok && !data.queue) {
+              if (this.queue.length > 0) {
+                window.BarberSyncStore.removeCurrentUserQueue(this.user);
+              }
+            }
+          } catch (e) {}
+        },
+
+        startPolling() {
+          this._pollInterval = setInterval(() => {
+            this.fetchFromServer();
+          }, 10000);
+        },
+
+        async cancelQueue() {
+          if (!this.currentQueue) return;
+          if (!confirm("Yakin ingin membatalkan antrian ini?")) return;
+          const rawId =
+            this.currentQueue.rawBookingId || this.currentQueue.bookingId;
+          try {
+            const res = await fetch("/api/bookings/" + rawId + "/cancel", {
+              method: "PATCH",
+            });
+            const data = await res.json();
+            if (data.ok) {
               this.message = "Antrian berhasil dibatalkan";
               setTimeout(() => {
                 window.BarberSyncStore.removeCurrentUserQueue(this.user);
                 this.queue = [];
               }, 1500);
+            } else {
+              this.message = data.message || "Gagal membatalkan antrian";
+              this.messageType = "error";
             }
+          } catch (e) {
+            this.message = "Gagal menghubungi server";
+            this.messageType = "error";
           }
-        },
-
-        normalizeQueueData(stored) {
-          if (!stored) return [];
-
-          const parsed = JSON.parse(stored);
-          const queueItem = Array.isArray(parsed) ? parsed[0] : parsed;
-
-          if (!queueItem) return [];
-
-          return [
-            {
-              bookingId: queueItem.bookingId || "BK001",
-              nomorAntrian: queueItem.nomorAntrian || 1,
-              currentNumber:
-                queueItem.currentNumber || queueItem.nomorAntrian || 1,
-              totalQueue: queueItem.totalQueue || queueItem.nomorAntrian || 1,
-              serviceName: queueItem.serviceName || "Potong Rambut",
-              barberName: queueItem.barberName || "Ahmad Syaiful",
-              jamBooking: queueItem.jamBooking || queueItem.time || "14:30",
-              statusBooking:
-                queueItem.statusBooking || queueItem.status || "pending",
-              estimasiWaktu: queueItem.estimasiWaktu || "20-30 menit",
-              progress: queueItem.progress || 100,
-            },
-          ];
         },
 
         init() {
@@ -356,12 +370,9 @@
             }
           } catch (e) {}
 
-          try {
-            this.queue = window.BarberSyncStore.getCurrentUserQueue(this.user);
-            if (this.queue.length === 0 && this.user) {
-              this.queue = [];
-            }
-          } catch (e) {}
+          this.fetchFromServer();
+
+          this.startPolling();
 
           this.unsubStore = window.BarberSyncStore.subscribe((key) => {
             if (!this.user) return;
